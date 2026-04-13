@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox prefHeight="740.0" prefWidth="1200.0" spacing="20.0" styleClass="app-root" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.esprit.gestionprojet.controller.TacheListController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <VBox fx:id="sidebarPanel" prefWidth="220.0" spacing="12.0" styleClass="sidebar-panel">
+        <Label styleClass="section-title" text="Backoffice" wrapText="true" />
+        <Button fx:id="dashboardButton" onAction="#goDashboard" styleClass="btn,btn-outline sidebar-button" text="Dashboard" />
+        <Button onAction="#goHome" styleClass="btn,btn-outline sidebar-button" text="Frontoffice" />
+        <Button onAction="#goProjects" styleClass="btn,btn-primary sidebar-button" text="Projets" />
+        <Button onAction="#createTache" styleClass="btn,btn-primary sidebar-button" text="Nouvelle Tache" />
+        <Button onAction="#logout" styleClass="btn,btn-danger sidebar-button" text="Logout" />
+    </VBox>
+
+    <VBox spacing="14.0" HBox.hgrow="ALWAYS">
+        <HBox fx:id="frontTopBar" alignment="CENTER_LEFT" spacing="10.0" styleClass="header-bar" visible="false" managed="false">
+            <Label styleClass="section-title" text="Gestion des taches" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Button onAction="#goHome" styleClass="btn,btn-outline" text="Homepage" />
+            <Button onAction="#goProjects" styleClass="btn,btn-primary" text="Projets" />
+            <Button onAction="#createTache" styleClass="btn,btn-primary" text="Nouvelle Tache" />
+            <Button onAction="#logout" styleClass="btn,btn-danger" text="Logout" />
+        </HBox>
+
+        <HBox spacing="10.0" styleClass="header-bar">
+            <Label fx:id="pageTitle" styleClass="section-title" text="Gestion des taches" />
+            <HBox HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <HBox spacing="10.0">
+            <TextField fx:id="searchField" HBox.hgrow="ALWAYS" promptText="Rechercher par libelle ou projet" />
+            <Button onAction="#refreshGrid" styleClass="btn,btn-primary" text="Rechercher" />
+            <Button onAction="#clearSearch" styleClass="btn,btn-outline" text="Reset" />
+        </HBox>
+
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <Label styleClass="field-label" text="Trier par" />
+            <ComboBox fx:id="sortCombo" onAction="#sortChanged" prefWidth="220.0" />
+        </HBox>
+
+        <Label fx:id="emptyLabel" styleClass="hint-text" text="Aucune tache trouvee." visible="false" managed="false" />
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <GridPane fx:id="gridContainer" hgap="14.0" vgap="14.0">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="280.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="280.0" />
+                    </columnConstraints>
+                </GridPane>
+            </content>
+        </ScrollPane>
+    </VBox>
+</HBox>

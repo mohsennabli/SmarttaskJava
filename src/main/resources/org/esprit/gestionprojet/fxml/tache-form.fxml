@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox prefHeight="740.0" prefWidth="1200.0" spacing="20.0" styleClass="app-root" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.esprit.gestionprojet.controller.TacheFormController">
+    <padding>
+        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+    </padding>
+
+    <VBox fx:id="sidebarPanel" prefWidth="220.0" spacing="12.0" styleClass="sidebar-panel">
+        <Label styleClass="section-title" text="Backoffice" wrapText="true" />
+        <Button fx:id="dashboardButton" onAction="#goDashboard" styleClass="btn,btn-outline sidebar-button" text="Dashboard" />
+        <Button onAction="#goHome" styleClass="btn,btn-outline sidebar-button" text="Frontoffice" />
+        <Button onAction="#goProjects" styleClass="btn,btn-primary sidebar-button" text="Projets" />
+        <Button onAction="#goTaches" styleClass="btn,btn-primary sidebar-button" text="Taches" />
+        <Button onAction="#logout" styleClass="btn,btn-danger sidebar-button" text="Logout" />
+    </VBox>
+
+    <VBox spacing="14.0" HBox.hgrow="ALWAYS">
+        <HBox fx:id="frontTopBar" alignment="CENTER_LEFT" spacing="10.0" styleClass="header-bar" visible="false" managed="false">
+            <Label styleClass="section-title" text="Taches" />
+            <HBox HBox.hgrow="ALWAYS" />
+            <Button onAction="#goHome" styleClass="btn,btn-outline" text="Homepage" />
+            <Button onAction="#goProjects" styleClass="btn,btn-primary" text="Projets" />
+            <Button onAction="#goTaches" styleClass="btn,btn-primary" text="Taches" />
+            <Button onAction="#logout" styleClass="btn,btn-danger" text="Logout" />
+        </HBox>
+
+        <Label fx:id="pageTitle" styleClass="section-title" text="Creer une tache" />
+
+        <GridPane hgap="12.0" vgap="12.0" styleClass="panel-card" VBox.vgrow="ALWAYS">
+            <padding>
+                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="160.0" />
+                <ColumnConstraints hgrow="ALWAYS" />
+            </columnConstraints>
+
+            <Label styleClass="field-label" text="Libelle" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <TextField fx:id="libelleField" promptText="Nom de la tache" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label fx:id="libelleError" styleClass="error-label" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+            <Label styleClass="field-label" text="Priorite" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+            <ComboBox fx:id="prioriteCombo" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Label fx:id="prioriteError" styleClass="error-label" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+            <Label styleClass="field-label" text="Date limite" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+            <DatePicker fx:id="dateLimitePicker" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label fx:id="dateLimiteError" styleClass="error-label" text="" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+            <Label styleClass="field-label" text="Etat" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+            <ComboBox fx:id="etatCombo" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <Label fx:id="etatError" styleClass="error-label" text="" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+
+            <Label styleClass="field-label" text="Projet" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+            <ComboBox fx:id="projetCombo" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+            <Label fx:id="projetError" styleClass="error-label" text="" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+        </GridPane>
+
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <Button onAction="#cancel" styleClass="btn,btn-outline" text="Annuler" />
+            <Button onAction="#saveTache" styleClass="btn,btn-primary" text="Enregistrer" />
+        </HBox>
+    </VBox>
+</HBox>

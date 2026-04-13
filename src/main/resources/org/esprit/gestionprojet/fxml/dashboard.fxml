@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox prefHeight="740.0" prefWidth="1200.0" spacing="20.0" styleClass="app-root" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.esprit.gestionprojet.controller.DashboardController">
+    <padding>
+        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+    </padding>
+
+    <VBox prefWidth="220.0" spacing="12.0" styleClass="sidebar-panel">
+        <Label styleClass="section-title" text="Backoffice" wrapText="true" />
+        <Label fx:id="welcomeLabel" styleClass="meta-text" text="Welcome" wrapText="true" />
+        <Label fx:id="officeLabel" styleClass="meta-text" text="Office" wrapText="true" />
+        <Button fx:id="dashboardButton" onAction="#goDashboard" styleClass="btn,btn-outline sidebar-button" text="Dashboard" />
+        <Button fx:id="openProjetsButton" onAction="#openProjets" styleClass="btn,btn-primary sidebar-button" text="Projets" />
+        <Button fx:id="openTachesButton" onAction="#openTaches" styleClass="btn,btn-primary sidebar-button" text="Taches" />
+        <Button onAction="#goHome" styleClass="btn,btn-outline sidebar-button" text="Frontoffice" />
+        <Button onAction="#logout" styleClass="btn,btn-danger sidebar-button" text="Logout" />
+    </VBox>
+
+    <VBox spacing="20.0" HBox.hgrow="ALWAYS">
+        <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+            <StackPane styleClass="dashboard-card" HBox.hgrow="ALWAYS">
+                <VBox alignment="CENTER" spacing="12.0">
+                    <Label styleClass="card-title" text="Projet Management" />
+                    <Label styleClass="section-subtitle" text="Create, update, and monitor project progress" wrapText="true" />
+                    <Button onAction="#openProjets" styleClass="btn,btn-primary" text="Open Projets" />
+                </VBox>
+            </StackPane>
+
+            <StackPane styleClass="dashboard-card" HBox.hgrow="ALWAYS">
+                <VBox alignment="CENTER" spacing="12.0">
+                    <Label styleClass="card-title" text="Tache Management" />
+                    <Label styleClass="section-subtitle" text="Manage task priorities and due dates" wrapText="true" />
+                    <Button onAction="#openTaches" styleClass="btn,btn-primary" text="Open Taches" />
+                </VBox>
+            </StackPane>
+        </HBox>
+    </VBox>
+</HBox>
