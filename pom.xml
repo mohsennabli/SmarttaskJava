@@ -50,8 +50,6 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>${maven.compiler.release}</release>
-                    <source>9</source>
-                    <target>9</target>
                 </configuration>
             </plugin>
             <plugin>

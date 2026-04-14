@@ -7,12 +7,17 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/com/smarttask/login.fxml"));
+        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(
+                getClass().getResource("/com/smarttask/login.fxml"),
+                "Missing FXML: /com/smarttask/login.fxml"
+        ));
+        Parent root = loader.load();
         stage.setTitle("SmartTask");
         stage.setScene(new Scene(root));
         stage.setMaximized(true);

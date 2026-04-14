@@ -32,7 +32,7 @@ public class UserDAO {
                 statement.setString(3, hashedPassword);
                 statement.setString(4, user.getType());
                 statement.setString(5, roles);
-                statement.setInt(6, 1);
+                statement.setInt(6, user.isEnabled() ? 1 : 0);
 
                 return statement.executeUpdate() > 0;
             }

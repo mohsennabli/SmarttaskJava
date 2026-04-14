@@ -9,7 +9,7 @@
 
 <AnchorPane minHeight="400.0" minWidth="600.0" prefHeight="600.0" prefWidth="900.0"
             styleClass="app-root" stylesheets="@styles/styles.css" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.smarttask.smarttask.HelloController">
+            fx:controller="com.smarttask.controller.HelloController">
     <children>
         <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
                    AnchorPane.topAnchor="0.0" styleClass="auth-shell">

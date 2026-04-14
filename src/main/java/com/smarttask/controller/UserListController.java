@@ -114,7 +114,19 @@ public class UserListController implements Initializable {
 
     @FXML
     private void handleAdd(ActionEvent event) {
-        System.out.println("Open Add User form");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/add-user.fxml"));
+            Stage addStage = new Stage();
+            addStage.setTitle("Add User");
+            addStage.initModality(Modality.APPLICATION_MODAL);
+            addStage.setScene(new Scene(loader.load()));
+            addStage.setMaximized(true);
+
+            addStage.showAndWait();
+            loadUsers();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open add user screen.");
+        }
     }
 
     @FXML
