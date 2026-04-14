@@ -2,6 +2,7 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
+import com.smarttask.util.InputValidator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -52,13 +53,14 @@ public class EditUserController implements Initializable {
 
     @FXML
     private void handleSave(ActionEvent event) {
-        String name = nameField.getText() == null ? "" : nameField.getText().trim();
-        String email = emailField.getText() == null ? "" : emailField.getText().trim();
-        String type = typeChoice.getValue();
+        String name = InputValidator.sanitize(nameField.getText());
+        String email = InputValidator.sanitize(emailField.getText());
+        String type = InputValidator.sanitize(typeChoice.getValue());
         boolean enabled = enabledCheck.isSelected();
 
-        if (name.isEmpty() || email.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Name and email are required.");
+        String validationMessage = InputValidator.validateUserUpdateFields(name, email, type);
+        if (validationMessage != null) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", validationMessage);
             return;
         }
 

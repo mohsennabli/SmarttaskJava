@@ -2,6 +2,7 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
+import com.smarttask.util.InputValidator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -42,13 +43,14 @@ public class AddUserController implements Initializable {
 
     @FXML
     private void handleSave(ActionEvent event) {
-        String name = nameField.getText() == null ? "" : nameField.getText().trim();
-        String email = emailField.getText() == null ? "" : emailField.getText().trim();
-        String password = passwordField.getText() == null ? "" : passwordField.getText().trim();
-        String type = typeChoice.getValue() == null ? "" : typeChoice.getValue().trim();
+        String name = InputValidator.sanitize(nameField.getText());
+        String email = InputValidator.sanitize(emailField.getText());
+        String password = InputValidator.sanitize(passwordField.getText());
+        String type = InputValidator.sanitize(typeChoice.getValue());
 
-        if (name.isEmpty() || email.isEmpty() || password.isEmpty() || type.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please fill in all fields.");
+        String validationMessage = InputValidator.validateUserCreationFields(name, email, password, type);
+        if (validationMessage != null) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", validationMessage);
             return;
         }
 
