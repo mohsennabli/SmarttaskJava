@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15" alignment="TOP_CENTER"
+      style="-fx-padding: 20; -fx-background-color: #f5f5f5;"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.smarttask.controller.TicketController">
+
+    <Label text="🎫 Gestion des Tickets"
+           style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+
+    <!-- Formulaire d'ajout/modification -->
+    <VBox spacing="10"
+          style="-fx-background-color: white; -fx-padding: 15; -fx-border-radius: 5; -fx-background-radius: 5;">
+
+        <Label text="Informations du ticket" style="-fx-font-weight: bold; -fx-font-size: 16;"/>
+
+        <GridPane hgap="10" vgap="10">
+            <Label text="Titre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="titreField" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="400"/>
+
+            <Label text="Description:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextArea fx:id="descriptionArea" GridPane.rowIndex="1" GridPane.columnIndex="1"
+                      prefHeight="100" wrapText="true"/>
+
+            <Label text="Statut:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="statutCombo" GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="200"/>
+
+            <Label text="Priorité:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="prioriteCombo" GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="200"/>
+        </GridPane>
+
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button text="➕ Ajouter" onAction="#addTicket"
+                    style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            <Button text="✏️ Modifier" onAction="#updateTicket"
+                    style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            <Button text="🗑️ Supprimer" onAction="#deleteTicket"
+                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            <Button text="🗑️ Effacer formulaire" onAction="#clearForm"
+                    style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        </HBox>
+    </VBox>
+
+    <!-- Section Recherche et Filtres -->
+    <VBox spacing="10"
+          style="-fx-background-color: white; -fx-padding: 15; -fx-border-radius: 5; -fx-background-radius: 5;">
+
+        <Label text="Recherche et Filtres" style="-fx-font-weight: bold; -fx-font-size: 16;"/>
+
+        <GridPane hgap="10" vgap="10">
+            <Label text="Recherche:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="searchField" GridPane.rowIndex="0" GridPane.columnIndex="1" promptText="Titre ou description..."/>
+            <Button text="🔍 Rechercher" onAction="#searchTickets" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+            <Label text="Filtrer par statut:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="filterStatutCombo" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="150"/>
+
+            <Label text="Filtrer par priorité:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="filterPrioriteCombo" GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="150"/>
+
+            <Button text="🔄 Rafraîchir" onAction="#refresh" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <Button text="❌ Effacer filtres" onAction="#clearFilters" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        </GridPane>
+    </VBox>
+
+    <!-- Tableau des tickets -->
+    <VBox spacing="5" VBox.vgrow="ALWAYS">
+        <Label text="Liste des tickets" style="-fx-font-weight: bold; -fx-font-size: 16;"/>
+
+        <TableView fx:id="ticketTable" VBox.vgrow="ALWAYS" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="50" resizable="false"/>
+                <TableColumn fx:id="colTitre" text="Titre" prefWidth="350"/>
+                <TableColumn fx:id="colStatut" text="Statut" prefWidth="100"/>
+                <TableColumn fx:id="colPriorite" text="Priorité" prefWidth="100"/>
+                <TableColumn fx:id="colDate" text="Date création" prefWidth="150"/>
+            </columns>
+            <placeholder>
+                <Label text="Aucun ticket trouvé" style="-fx-text-fill: #7f8c8d;"/>
+            </placeholder>
+        </TableView>
+
+        <Label fx:id="lblStats" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12;"/>
+    </VBox>
+
+</VBox>

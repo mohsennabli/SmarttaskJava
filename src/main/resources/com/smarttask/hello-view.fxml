@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane minHeight="400.0" minWidth="600.0" prefHeight="600.0" prefWidth="900.0"
+            styleClass="app-root" stylesheets="@styles/styles.css" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smarttask.smarttask.HelloController">
+    <children>
+        <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                   AnchorPane.topAnchor="0.0" styleClass="auth-shell">
+            <VBox alignment="CENTER" prefWidth="420.0" spacing="14.0" styleClass="auth-card">
+                <padding>
+                    <Insets top="6.0" right="6.0" bottom="6.0" left="6.0"/>
+                </padding>
+                <Label styleClass="title-text" text="Welcome"/>
+                <Label fx:id="welcomeText" styleClass="subtitle-text" text="SmartTask demo screen"/>
+                <Button onAction="#onHelloButtonClick" styleClass="primary-button" text="Hello!"/>
+            </VBox>
+        </StackPane>
+    </children>
+</AnchorPane>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane minHeight="600.0" minWidth="1000.0" prefHeight="720.0" prefWidth="1280.0"
+            styleClass="app-root" stylesheets="@styles/styles.css" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smarttask.controller.UserListController">
+    <children>
+        <VBox spacing="14.0" styleClass="page-container" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <padding>
+                <Insets top="18.0" right="18.0" bottom="18.0" left="18.0"/>
+            </padding>
+
+            <VBox prefHeight="620.0" spacing="16.0" styleClass="page-card" VBox.vgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="page-header">
+                    <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                        <Label styleClass="section-title" text="User Management"/>
+                        <Label styleClass="dashboard-subtitle" text="Search, edit, enable, disable, or remove users from one place."/>
+                    </VBox>
+                    <Button fx:id="logoutButton" onAction="#handleLogout" styleClass="secondary-button" text="Logout"/>
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="toolbar">
+                    <TextField fx:id="searchField" HBox.hgrow="ALWAYS"
+                               promptText="Search by name, email or type..." styleClass="form-field"/>
+                    <Button fx:id="searchButton" onAction="#handleSearch" styleClass="primary-button" text="Search"/>
+                    <Button fx:id="resetButton" onAction="#handleReset" styleClass="secondary-button" text="Reset"/>
+                </HBox>
+
+                <TableView fx:id="usersTable" VBox.vgrow="ALWAYS" styleClass="table-surface">
+                    <columns>
+                        <TableColumn fx:id="colId" prefWidth="90.0" text="ID"/>
+                        <TableColumn fx:id="colName" prefWidth="220.0" text="Name"/>
+                        <TableColumn fx:id="colEmail" prefWidth="320.0" text="Email"/>
+                        <TableColumn fx:id="colType" prefWidth="140.0" text="Type"/>
+                        <TableColumn fx:id="colEnabled" prefWidth="140.0" text="Enabled"/>
+                    </columns>
+                </TableView>
+
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <Button fx:id="addButton" onAction="#handleAdd" styleClass="secondary-button" text="Add User"/>
+                    <Button fx:id="editButton" onAction="#handleEdit" styleClass="primary-button" text="Edit"/>
+                    <Button fx:id="deleteButton" onAction="#handleDelete" styleClass="danger-button" text="Delete"/>
+                    <Button fx:id="enableButton" onAction="#handleEnable" styleClass="primary-button" text="Enable"/>
+                    <Button fx:id="disableButton" onAction="#handleDisable" styleClass="secondary-button" text="Disable"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT" spacing="2.0" styleClass="stats-pill">
+                        <Label fx:id="statsLabel" styleClass="stats-title" text="Total users: 0  |  Enabled: 0  |  Disabled: 0"/>
+                        <Label styleClass="stats-note" text="Dashboard updates automatically after actions."/>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </VBox>
+    </children>
+</AnchorPane>

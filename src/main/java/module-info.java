@@ -1,0 +1,14 @@
+module com.smarttask {
+    requires javafx.controls;
+    requires javafx.fxml;
+    requires java.sql;
+    requires jbcrypt;
+
+    opens com.smarttask to javafx.graphics, javafx.fxml;
+    opens com.smarttask.controller to javafx.fxml;
+
+    exports com.smarttask;
+    exports com.smarttask.model;
+    exports com.smarttask.dao;
+    exports com.smarttask.util;
+}
