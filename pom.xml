@@ -17,6 +17,7 @@
         <javafx.version>21</javafx.version>
         <mysql.connector.version>8.4.0</mysql.connector.version>
         <jbcrypt.version>0.4</jbcrypt.version>
+        <itext.version>7.2.5</itext.version>
     </properties>
 
     <dependencies>
@@ -40,6 +41,16 @@
             <artifactId>jbcrypt</artifactId>
             <version>${jbcrypt.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+            <version>${itext.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>${itext.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -50,8 +61,6 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>${maven.compiler.release}</release>
-                    <source>9</source>
-                    <target>9</target>
                 </configuration>
             </plugin>
             <plugin>
