@@ -38,7 +38,6 @@
 
                 <TableView fx:id="usersTable" VBox.vgrow="ALWAYS" styleClass="table-surface">
                     <columns>
-                        <TableColumn fx:id="colId" prefWidth="90.0" text="ID"/>
                         <TableColumn fx:id="colName" prefWidth="220.0" text="Name"/>
                         <TableColumn fx:id="colEmail" prefWidth="320.0" text="Email"/>
                         <TableColumn fx:id="colType" prefWidth="140.0" text="Type"/>
@@ -60,5 +59,7 @@
                 </HBox>
             </VBox>
         </VBox>
+        <Button fx:id="profileButton" onAction="#handleProfile" styleClass="secondary-button" text="👤 Mon Profil"
+                AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
     </children>
 </AnchorPane>

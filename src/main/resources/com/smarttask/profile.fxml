@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane minHeight="600.0" minWidth="900.0" prefHeight="760.0" prefWidth="900.0"
+            styleClass="app-root" stylesheets="@styles/styles.css" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smarttask.controller.ProfileController">
+    <children>
+        <StackPane styleClass="auth-shell" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <VBox alignment="TOP_CENTER" minWidth="420.0" prefWidth="460.0" spacing="14.0" styleClass="page-card">
+                <padding>
+                    <Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/>
+                </padding>
+
+                <children>
+                    <Label styleClass="section-title" text="Mon Profil"/>
+                    <Label styleClass="subtitle-text" text="Mettez a jour vos informations personnelles"/>
+
+                    <ImageView fx:id="avatarPreview" fitHeight="100.0" fitWidth="100.0" preserveRatio="false"
+                               styleClass="avatar-preview"/>
+
+                    <Button fx:id="uploadAvatarButton" mnemonicParsing="false" onAction="#handleUploadAvatar"
+                            styleClass="secondary-button" text="Changer la photo"/>
+
+                    <VBox maxWidth="420.0" minWidth="420.0" spacing="10.0">
+                        <children>
+                            <TextField fx:id="nameField" promptText="Nom complet" styleClass="form-field"/>
+                            <TextField fx:id="emailField" promptText="Email" styleClass="form-field"/>
+                        </children>
+                    </VBox>
+
+                    <Separator prefWidth="420.0"/>
+
+                    <VBox maxWidth="420.0" minWidth="420.0" spacing="10.0">
+                        <children>
+                            <Label styleClass="subtitle-text" text="Changer le mot de passe"/>
+                            <PasswordField fx:id="currentPasswordField" promptText="Mot de passe actuel" styleClass="form-field"/>
+                            <PasswordField fx:id="newPasswordField" promptText="Nouveau mot de passe" styleClass="form-field"/>
+                            <PasswordField fx:id="confirmPasswordField" promptText="Confirmer le nouveau mot de passe" styleClass="form-field"/>
+                        </children>
+                    </VBox>
+
+                    <HBox alignment="CENTER" spacing="10.0">
+                        <children>
+                            <Button fx:id="saveButton" mnemonicParsing="false" onAction="#handleSave"
+                                    styleClass="primary-button" text="Enregistrer"/>
+                            <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#handleCancel"
+                                    styleClass="secondary-button" text="Annuler"/>
+                        </children>
+                    </HBox>
+                </children>
+            </VBox>
+        </StackPane>
+    </children>
+</AnchorPane>
+
+

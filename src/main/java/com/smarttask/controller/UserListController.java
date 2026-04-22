@@ -34,9 +34,6 @@ public class UserListController implements Initializable {
     private TableView<User> usersTable;
 
     @FXML
-    private TableColumn<User, Integer> colId;
-
-    @FXML
     private TableColumn<User, String> colName;
 
     @FXML
@@ -67,6 +64,9 @@ public class UserListController implements Initializable {
     private Button logoutButton;
 
     @FXML
+    private Button profileButton;
+
+    @FXML
     private TextField searchField;
 
     @FXML
@@ -80,7 +80,6 @@ public class UserListController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        colId.setCellValueFactory(new PropertyValueFactory<>("iduser"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
@@ -256,6 +255,24 @@ public class UserListController implements Initializable {
             stage.show();
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to return to login screen.");
+        }
+    }
+
+    @FXML
+    private void handleProfile(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/profile.fxml"));
+            Stage profileStage = new Stage();
+            profileStage.setTitle("Mon Profil");
+            profileStage.initModality(Modality.APPLICATION_MODAL);
+            profileStage.initOwner(profileButton.getScene().getWindow());
+            profileStage.setScene(new Scene(loader.load()));
+            profileStage.setResizable(false);
+
+            profileStage.showAndWait();
+            loadUsers();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open profile screen.");
         }
     }
 

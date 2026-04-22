@@ -139,6 +139,29 @@ public class UserDAO {
         }
     }
 
+    public boolean updateProfile(User user) {
+        String sql = "UPDATE user SET name=?, email=?, type=?, password=?, avatar_name=? WHERE iduser=?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, user.getName());
+                statement.setString(2, user.getEmail());
+                statement.setString(3, user.getType());
+                statement.setString(4, user.getPassword());
+                statement.setString(5, user.getAvatarName());
+                statement.setInt(6, user.getIduser());
+                return statement.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to update profile: " + e.getMessage());
+            return false;
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+    }
+
     public boolean deleteUser(int iduser) {
         String sql = "DELETE FROM user WHERE iduser=?";
         Connection connection = null;

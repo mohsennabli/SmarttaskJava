@@ -2,12 +2,12 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
-import com.smarttask.util.InputValidator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -31,6 +31,9 @@ public class AddUserController implements Initializable {
     private ChoiceBox<String> typeChoice;
 
     @FXML
+    private CheckBox enabledCheck;
+
+    @FXML
     private Button saveButton;
 
     @FXML
@@ -39,18 +42,19 @@ public class AddUserController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         typeChoice.getItems().setAll("manager", "collaborator");
+        enabledCheck.setSelected(true);
     }
 
     @FXML
     private void handleSave(ActionEvent event) {
-        String name = InputValidator.sanitize(nameField.getText());
-        String email = InputValidator.sanitize(emailField.getText());
-        String password = InputValidator.sanitize(passwordField.getText());
-        String type = InputValidator.sanitize(typeChoice.getValue());
+        String name = nameField.getText() == null ? "" : nameField.getText().trim();
+        String email = emailField.getText() == null ? "" : emailField.getText().trim();
+        String password = passwordField.getText() == null ? "" : passwordField.getText().trim();
+        String type = typeChoice.getValue() == null ? "" : typeChoice.getValue().trim();
+        boolean enabled = enabledCheck.isSelected();
 
-        String validationMessage = InputValidator.validateUserCreationFields(name, email, password, type);
-        if (validationMessage != null) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", validationMessage);
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please fill in all required fields.");
             return;
         }
 
@@ -66,13 +70,13 @@ public class AddUserController implements Initializable {
         user.setPassword(password);
         user.setType(type);
         user.setRoles("[]");
-        user.setEnabled(true);
+        user.setEnabled(enabled);
 
         if (userDAO.register(user)) {
             showAlert(Alert.AlertType.INFORMATION, "Success", "User added successfully!");
             ((Stage) saveButton.getScene().getWindow()).close();
         } else {
-            showAlert(Alert.AlertType.ERROR, "Error", "Unable to add user. Please try again.");
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to add user. Please try again.");
         }
     }
 
