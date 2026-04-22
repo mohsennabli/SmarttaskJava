@@ -61,6 +61,9 @@ public class UserListController implements Initializable {
     private Button disableButton;
 
     @FXML
+    private Button formationsButton;
+
+    @FXML
     private Button logoutButton;
 
     @FXML
@@ -237,6 +240,19 @@ public class UserListController implements Initializable {
             loadUsers();
         } else {
             showAlert(Alert.AlertType.ERROR, "Update Failed", "Unable to disable user. Please try again.");
+        }
+    }
+
+    @FXML
+    private void handleFormations(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/formations.fxml"));
+            Stage stage = (Stage) formationsButton.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+            stage.setMaximized(true);
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open formations.");
         }
     }
 

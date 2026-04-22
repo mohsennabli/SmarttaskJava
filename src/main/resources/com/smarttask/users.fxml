@@ -26,6 +26,8 @@
                         <Label styleClass="section-title" text="User Management"/>
                         <Label styleClass="dashboard-subtitle" text="Search, edit, enable, disable, or remove users from one place."/>
                     </VBox>
+                    <Button fx:id="formationsButton" onAction="#handleFormations" styleClass="primary-button"
+                            text="Formations"/>
                     <Button fx:id="logoutButton" onAction="#handleLogout" styleClass="secondary-button" text="Logout"/>
                 </HBox>
 
