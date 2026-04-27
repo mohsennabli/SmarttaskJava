@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,6 +88,7 @@ public class UserDAO {
                     user.setPassword(resultSet.getString("password"));
                     user.setType(resultSet.getString("type"));
                     user.setGoogleId(resultSet.getString("google_id"));
+                    user.setGithubId(resultSet.getString("github_id"));
                     user.setRoles(resultSet.getString("roles"));
                     user.setEnabled(resultSet.getBoolean("is_enabled"));
                     user.setLinkedinId(resultSet.getString("linkedin_id"));
@@ -222,6 +224,7 @@ public class UserDAO {
                         user.setPassword(resultSet.getString("password"));
                         user.setType(resultSet.getString("type"));
                         user.setGoogleId(resultSet.getString("google_id"));
+                        user.setGithubId(resultSet.getString("github_id"));
                         user.setRoles(resultSet.getString("roles"));
                         user.setEnabled(resultSet.getBoolean("is_enabled"));
                         user.setLinkedinId(resultSet.getString("linkedin_id"));
@@ -312,6 +315,29 @@ public class UserDAO {
         return null;
     }
 
+    public User findByGitHubId(String githubId) {
+        String sql = "SELECT * FROM user WHERE github_id = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, githubId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return mapUser(resultSet);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to find user by GitHub ID: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return null;
+    }
+
     public User findByEmail(String email) {
         String sql = "SELECT * FROM user WHERE email = ?";
         Connection connection = null;
@@ -368,6 +394,39 @@ public class UserDAO {
         return findByGoogleId(googleId);
     }
 
+    public User upsertGitHubUser(String githubId, String email, String name) {
+        User byGitHubId = findByGitHubId(githubId);
+        if (byGitHubId != null) {
+            return byGitHubId;
+        }
+
+        User byEmail = findByEmail(email);
+        if (byEmail != null) {
+            if (byEmail.getGithubId() == null || byEmail.getGithubId().isBlank()) {
+                if (!linkGitHubAccount(byEmail.getIduser(), githubId)) {
+                    return null;
+                }
+                if (name != null && !name.isBlank()) {
+                    updateUserName(byEmail.getIduser(), name);
+                }
+                return findByEmail(email);
+            }
+
+            if (githubId.equals(byEmail.getGithubId())) {
+                return byEmail;
+            }
+
+            return null;
+        }
+
+        int newUserId = insertGitHubUser(name, email, githubId);
+        if (newUserId <= 0) {
+            return null;
+        }
+
+        return findByGitHubId(githubId);
+    }
+
     private int insertGoogleUser(String name, String email, String googleId) {
         String sql = "INSERT INTO user (name, email, password, type, google_id, roles, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?)";
         Connection connection = null;
@@ -378,7 +437,7 @@ public class UserDAO {
                 String safeName = (name == null || name.isBlank()) ? email : name;
                 statement.setString(1, safeName);
                 statement.setString(2, email);
-                statement.setString(3, null);
+                statement.setNull(3, Types.VARCHAR);
                 statement.setString(4, "collaborator");
                 statement.setString(5, googleId);
                 statement.setString(6, "[]");
@@ -403,6 +462,41 @@ public class UserDAO {
         return -1;
     }
 
+    private int insertGitHubUser(String name, String email, String githubId) {
+        String sql = "INSERT INTO user (name, email, password, type, github_id, roles, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                String safeName = (name == null || name.isBlank()) ? email : name;
+                statement.setString(1, safeName);
+                statement.setString(2, email);
+                statement.setNull(3, Types.VARCHAR);
+                statement.setString(4, "collaborator");
+                statement.setString(5, githubId);
+                statement.setString(6, "[]");
+                statement.setBoolean(7, true);
+
+                if (statement.executeUpdate() <= 0) {
+                    return -1;
+                }
+
+                try (ResultSet keys = statement.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        return keys.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to create GitHub user: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return -1;
+    }
+
     private boolean linkGoogleAccount(int userId, String googleId) {
         String sql = "UPDATE user SET google_id = ? WHERE iduser = ?";
         Connection connection = null;
@@ -416,6 +510,26 @@ public class UserDAO {
             }
         } catch (SQLException e) {
             System.err.println("Failed to link Google account: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return false;
+    }
+
+    private boolean linkGitHubAccount(int userId, String githubId) {
+        String sql = "UPDATE user SET github_id = ? WHERE iduser = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, githubId);
+                statement.setInt(2, userId);
+                return statement.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to link GitHub account: " + e.getMessage());
         } finally {
             DatabaseConnection.closeConnection(connection);
         }
@@ -449,6 +563,7 @@ public class UserDAO {
         user.setPassword(resultSet.getString("password"));
         user.setType(resultSet.getString("type"));
         user.setGoogleId(resultSet.getString("google_id"));
+        user.setGithubId(resultSet.getString("github_id"));
         user.setRoles(resultSet.getString("roles"));
         user.setEnabled(resultSet.getBoolean("is_enabled"));
         user.setLinkedinId(resultSet.getString("linkedin_id"));

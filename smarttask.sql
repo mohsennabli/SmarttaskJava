@@ -182,6 +182,7 @@ CREATE TABLE `user` (
   `email` varchar(255) NOT NULL,
   `password` varchar(255) DEFAULT NULL,
   `google_id` varchar(100) DEFAULT NULL,
+  `github_id` varchar(100) DEFAULT NULL,
   `linkedin_id` varchar(100) DEFAULT NULL,
   `roles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`roles`)),
   `is_enabled` tinyint(4) NOT NULL DEFAULT 1,
@@ -197,8 +198,8 @@ CREATE TABLE `user` (
 -- Déchargement des données de la table `user`
 --
 
-INSERT INTO `user` (`iduser`, `name`, `email`, `password`, `google_id`, `linkedin_id`, `roles`, `is_enabled`, `reset_token`, `reset_token_expires_at`, `avatar_name`, `updated_at`, `face_embedding`, `type`) VALUES
-(1, 'mouhanned', 'mouhannedkhemir2@gmail.com', '$2y$13$lmHPsSphECnbbyndJnBKv.VQPUDjq2Fjpu4HMUZbzI6eSKJkmTntq', NULL, NULL, '[]', 1, NULL, NULL, NULL, NULL, NULL, 'manager');
+INSERT INTO `user` (`iduser`, `name`, `email`, `password`, `google_id`, `github_id`, `linkedin_id`, `roles`, `is_enabled`, `reset_token`, `reset_token_expires_at`, `avatar_name`, `updated_at`, `face_embedding`, `type`) VALUES
+(1, 'mouhanned', 'mouhannedkhemir2@gmail.com', '$2y$13$lmHPsSphECnbbyndJnBKv.VQPUDjq2Fjpu4HMUZbzI6eSKJkmTntq', NULL, NULL, NULL, '[]', 1, NULL, NULL, NULL, NULL, NULL, 'manager');
 
 --
 -- Index pour les tables déchargées
@@ -263,6 +264,7 @@ ALTER TABLE `tache`
 ALTER TABLE `user`
   ADD PRIMARY KEY (`iduser`),
   ADD UNIQUE KEY `UNIQ_8D93D64976F5C865` (`google_id`),
+  ADD UNIQUE KEY `UNIQ_8D93D649GITHUBID` (`github_id`),
   ADD UNIQUE KEY `UNIQ_8D93D64999ABDB52` (`linkedin_id`);
 
 --

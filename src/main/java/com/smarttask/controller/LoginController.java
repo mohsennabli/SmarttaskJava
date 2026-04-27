@@ -2,6 +2,8 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
+import com.smarttask.service.GitHubOAuthService;
+import com.smarttask.service.GitHubOAuthService.GitHubUserInfo;
 import com.smarttask.service.GoogleOAuthService;
 import com.smarttask.service.GoogleOAuthService.GoogleUserInfo;
 import com.smarttask.util.AppSession;
@@ -46,10 +48,14 @@ public class LoginController implements Initializable {
     private Button googleSignInButton;
 
     @FXML
+    private Button githubSignInButton;
+
+    @FXML
     private Hyperlink registerLink;
 
     private final UserDAO userDAO = new UserDAO();
     private final GoogleOAuthService googleOAuthService = new GoogleOAuthService();
+    private final GitHubOAuthService githubOAuthService = new GitHubOAuthService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -120,7 +126,7 @@ public class LoginController implements Initializable {
             return;
         }
 
-        Stage oauthStage = buildOAuthStage();
+        Stage oauthStage = buildOAuthStage("Sign in with Google");
         WebView webView = (WebView) ((VBox) oauthStage.getScene().getRoot()).getChildren().get(0);
         WebEngine webEngine = webView.getEngine();
 
@@ -140,6 +146,58 @@ public class LoginController implements Initializable {
         }));
 
         oauthStage.setOnHidden(e -> googleOAuthService.stopLocalOAuthEndpoints());
+        webEngine.load(authorizationUrl);
+        oauthStage.show();
+    }
+
+    @FXML
+    private void handleGitHubSignIn(ActionEvent event) {
+        if (!GitHubOAuthService.isConfigurationReady()) {
+            showAlert(
+                    Alert.AlertType.WARNING,
+                    "GitHub OAuth Not Configured",
+                    "Please set SMARTTASK_GITHUB_CLIENT_ID, SMARTTASK_GITHUB_CLIENT_SECRET and SMARTTASK_GITHUB_REDIRECT_URI."
+            );
+            return;
+        }
+
+        String expectedState = githubOAuthService.generateState();
+        try {
+            githubOAuthService.startLocalOAuthEndpoints(expectedState);
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "OAuth Error", "Unable to start local GitHub callback endpoint.");
+            return;
+        }
+
+        String authorizationUrl;
+        try {
+            authorizationUrl = githubOAuthService.fetchLocalAuthorizationUrl();
+        } catch (IOException | InterruptedException e) {
+            githubOAuthService.stopLocalOAuthEndpoints();
+            showAlert(Alert.AlertType.ERROR, "OAuth Error", "Unable to generate GitHub authorization URL.");
+            return;
+        }
+
+        Stage oauthStage = buildOAuthStage("Sign in with GitHub");
+        WebView webView = (WebView) ((VBox) oauthStage.getScene().getRoot()).getChildren().get(0);
+        WebEngine webEngine = webView.getEngine();
+
+        CompletableFuture<GitHubOAuthService.OAuthCallbackData> callbackFuture = githubOAuthService.getCallbackFuture();
+        callbackFuture.whenComplete((callback, throwable) -> Platform.runLater(() -> {
+            githubOAuthService.stopLocalOAuthEndpoints();
+            if (oauthStage.isShowing()) {
+                oauthStage.close();
+            }
+
+            if (throwable != null) {
+                showAlert(Alert.AlertType.ERROR, "GitHub Sign-In Failed", "GitHub authentication was canceled or failed.");
+                return;
+            }
+
+            handleGitHubCallback(callback.getCode(), callback.getState(), expectedState);
+        }));
+
+        oauthStage.setOnHidden(e -> githubOAuthService.stopLocalOAuthEndpoints());
         webEngine.load(authorizationUrl);
         oauthStage.show();
     }
@@ -184,7 +242,47 @@ public class LoginController implements Initializable {
         }));
     }
 
-    private Stage buildOAuthStage() {
+    private void handleGitHubCallback(String code, String returnedState, String expectedState) {
+        if (!expectedState.equals(returnedState)) {
+            showAlert(Alert.AlertType.ERROR, "Security Error", "Invalid OAuth state received.");
+            return;
+        }
+
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                GitHubUserInfo githubUser = githubOAuthService.authenticateWithCode(code);
+                User user = userDAO.upsertGitHubUser(githubUser.getId(), githubUser.getEmail(), githubUser.getName());
+                if (user == null) {
+                    throw new IOException("Unable to link or create user account.");
+                }
+                return user;
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(e);
+            }
+        }).whenComplete((user, throwable) -> Platform.runLater(() -> {
+            if (throwable != null) {
+                showAlert(Alert.AlertType.ERROR, "GitHub Sign-In Failed", "Unable to complete GitHub authentication.");
+                return;
+            }
+
+            if (!user.isEnabled()) {
+                showAlert(Alert.AlertType.ERROR, "Account Disabled", "Your account is disabled.");
+                return;
+            }
+
+            AppSession.setCurrentUser(user);
+            try {
+                openUsersView();
+            } catch (IOException e) {
+                showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open users screen.");
+            }
+        }));
+    }
+
+    private Stage buildOAuthStage(String title) {
         WebView webView = new WebView();
         webView.setPrefSize(900, 700);
 
@@ -197,7 +295,7 @@ public class LoginController implements Initializable {
 
         Stage ownerStage = (Stage) loginButton.getScene().getWindow();
         Stage oauthStage = new Stage();
-        oauthStage.setTitle("Sign in with Google");
+        oauthStage.setTitle(title);
         oauthStage.initOwner(ownerStage);
         oauthStage.initModality(Modality.APPLICATION_MODAL);
         oauthStage.setScene(new Scene(root, 920, 760));

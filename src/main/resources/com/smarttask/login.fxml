@@ -26,6 +26,7 @@
                 <PasswordField fx:id="passwordField" maxWidth="380.0" promptText="Password" styleClass="form-field"/>
                 <Button fx:id="loginButton" maxWidth="380.0" onAction="#handleLogin" styleClass="primary-button" text="Login"/>
                 <Button fx:id="googleSignInButton" maxWidth="380.0" onAction="#handleGoogleSignIn" styleClass="secondary-button" text="Sign in with Google"/>
+                <Button fx:id="githubSignInButton" maxWidth="380.0" onAction="#handleGitHubSignIn" styleClass="secondary-button" text="Sign in with GitHub"/>
                 <Hyperlink fx:id="registerLink" onAction="#handleRegisterLink" styleClass="link-text" text="Don't have an account? Register"/>
             </VBox>
         </StackPane>
