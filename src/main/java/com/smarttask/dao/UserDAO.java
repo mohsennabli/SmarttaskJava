@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -273,31 +274,8 @@ public class UserDAO {
                             return null;
                         }
 
-                        User user = new User();
-                        user.setIduser(resultSet.getInt("iduser"));
-                        user.setName(resultSet.getString("name"));
-                        user.setEmail(resultSet.getString("email"));
+                        User user = mapUser(resultSet);
                         user.setPassword(hashedPassword);
-                        user.setType(resultSet.getString("type"));
-                        user.setGoogleId(resultSet.getString("google_id"));
-                        user.setRoles(resultSet.getString("roles"));
-                        user.setEnabled(resultSet.getBoolean("is_enabled"));
-                        user.setLinkedinId(resultSet.getString("linkedin_id"));
-                        user.setResetToken(resultSet.getString("reset_token"));
-
-                        Timestamp resetTokenExpiresAtTs = resultSet.getTimestamp("reset_token_expires_at");
-                        if (resetTokenExpiresAtTs != null) {
-                            user.setResetTokenExpiresAt(resetTokenExpiresAtTs.toLocalDateTime());
-                        }
-
-                        user.setAvatarName(resultSet.getString("avatar_name"));
-
-                        Timestamp updatedAtTs = resultSet.getTimestamp("updated_at");
-                        if (updatedAtTs != null) {
-                            user.setUpdatedAt(updatedAtTs.toLocalDateTime());
-                        }
-
-                        user.setFaceEmbedding(resultSet.getString("face_embedding"));
                         return user;
                     }
                 }
@@ -309,6 +287,187 @@ public class UserDAO {
         }
 
         return null;
+    }
+
+    public User findByGoogleId(String googleId) {
+        String sql = "SELECT * FROM user WHERE google_id = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, googleId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return mapUser(resultSet);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to find user by Google ID: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return null;
+    }
+
+    public User findByEmail(String email) {
+        String sql = "SELECT * FROM user WHERE email = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, email);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return mapUser(resultSet);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to find user by email: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return null;
+    }
+
+    public User upsertGoogleUser(String googleId, String email, String name) {
+        User byGoogleId = findByGoogleId(googleId);
+        if (byGoogleId != null) {
+            return byGoogleId;
+        }
+
+        User byEmail = findByEmail(email);
+        if (byEmail != null) {
+            if (byEmail.getGoogleId() == null || byEmail.getGoogleId().isBlank()) {
+                if (!linkGoogleAccount(byEmail.getIduser(), googleId)) {
+                    return null;
+                }
+                if (name != null && !name.isBlank()) {
+                    updateUserName(byEmail.getIduser(), name);
+                }
+                return findByEmail(email);
+            }
+
+            if (googleId.equals(byEmail.getGoogleId())) {
+                return byEmail;
+            }
+
+            return null;
+        }
+
+        int newUserId = insertGoogleUser(name, email, googleId);
+        if (newUserId <= 0) {
+            return null;
+        }
+
+        return findByGoogleId(googleId);
+    }
+
+    private int insertGoogleUser(String name, String email, String googleId) {
+        String sql = "INSERT INTO user (name, email, password, type, google_id, roles, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                String safeName = (name == null || name.isBlank()) ? email : name;
+                statement.setString(1, safeName);
+                statement.setString(2, email);
+                statement.setString(3, null);
+                statement.setString(4, "collaborator");
+                statement.setString(5, googleId);
+                statement.setString(6, "[]");
+                statement.setBoolean(7, true);
+
+                if (statement.executeUpdate() <= 0) {
+                    return -1;
+                }
+
+                try (ResultSet keys = statement.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        return keys.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to create Google user: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return -1;
+    }
+
+    private boolean linkGoogleAccount(int userId, String googleId) {
+        String sql = "UPDATE user SET google_id = ? WHERE iduser = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, googleId);
+                statement.setInt(2, userId);
+                return statement.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to link Google account: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return false;
+    }
+
+    private void updateUserName(int userId, String name) {
+        String sql = "UPDATE user SET name = ? WHERE iduser = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, name);
+                statement.setInt(2, userId);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to sync user name from Google profile: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+    }
+
+    private User mapUser(ResultSet resultSet) throws SQLException {
+        User user = new User();
+        user.setIduser(resultSet.getInt("iduser"));
+        user.setName(resultSet.getString("name"));
+        user.setEmail(resultSet.getString("email"));
+        user.setPassword(resultSet.getString("password"));
+        user.setType(resultSet.getString("type"));
+        user.setGoogleId(resultSet.getString("google_id"));
+        user.setRoles(resultSet.getString("roles"));
+        user.setEnabled(resultSet.getBoolean("is_enabled"));
+        user.setLinkedinId(resultSet.getString("linkedin_id"));
+        user.setResetToken(resultSet.getString("reset_token"));
+
+        Timestamp resetTokenExpiresAtTs = resultSet.getTimestamp("reset_token_expires_at");
+        if (resetTokenExpiresAtTs != null) {
+            user.setResetTokenExpiresAt(resetTokenExpiresAtTs.toLocalDateTime());
+        }
+
+        user.setAvatarName(resultSet.getString("avatar_name"));
+
+        Timestamp updatedAtTs = resultSet.getTimestamp("updated_at");
+        if (updatedAtTs != null) {
+            user.setUpdatedAt(updatedAtTs.toLocalDateTime());
+        }
+
+        user.setFaceEmbedding(resultSet.getString("face_embedding"));
+        return user;
     }
 }
 
