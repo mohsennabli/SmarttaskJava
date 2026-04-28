@@ -20,10 +20,8 @@ public class TicketDAO {
             ps.setString(3, t.getStatut());
             ps.setString(4, t.getPriorite());
             ps.setTimestamp(5, new Timestamp(t.getDateCreation().getTime()));
-
             ps.executeUpdate();
 
-            // Récupérer l'ID généré
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     t.setId(generatedKeys.getInt(1));
@@ -98,13 +96,13 @@ public class TicketDAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la recherche des tickets: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la recherche: " + e.getMessage(), e);
         }
 
         return list;
     }
 
-    // 🎛️ Filtrage par statut
+    // 🎛️ Filtre par statut
     public List<Ticket> filterByStatut(String statut) throws RuntimeException {
         List<Ticket> list = new ArrayList<>();
         String sql = "SELECT * FROM ticket WHERE statut = ? ORDER BY date_creation DESC";
@@ -122,13 +120,13 @@ public class TicketDAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors du filtrage des tickets: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors du filtrage par statut: " + e.getMessage(), e);
         }
 
         return list;
     }
 
-    // 🎛️ Filtrage par priorité
+    // 🎛️ Filtre par priorité
     public List<Ticket> filterByPriorite(String priorite) throws RuntimeException {
         List<Ticket> list = new ArrayList<>();
         String sql = "SELECT * FROM ticket WHERE priorite = ? ORDER BY date_creation DESC";
@@ -146,35 +144,22 @@ public class TicketDAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors du filtrage des tickets: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors du filtrage par priorité: " + e.getMessage(), e);
         }
 
         return list;
     }
 
-    // 🎛️ Filtrage multiple (statut et priorité)
+    // 🎛️ Filtre combiné (statut ET priorité)
     public List<Ticket> filter(String statut, String priorite) throws RuntimeException {
         List<Ticket> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM ticket WHERE 1=1");
-
-        if (statut != null && !statut.isEmpty()) {
-            sql.append(" AND statut = ?");
-        }
-        if (priorite != null && !priorite.isEmpty()) {
-            sql.append(" AND priorite = ?");
-        }
-        sql.append(" ORDER BY date_creation DESC");
+        String sql = "SELECT * FROM ticket WHERE statut = ? AND priorite = ? ORDER BY date_creation DESC";
 
         try (Connection cnx = DatabaseConnection.getConnection();
-             PreparedStatement ps = cnx.prepareStatement(sql.toString())) {
+             PreparedStatement ps = cnx.prepareStatement(sql)) {
 
-            int index = 1;
-            if (statut != null && !statut.isEmpty()) {
-                ps.setString(index++, statut);
-            }
-            if (priorite != null && !priorite.isEmpty()) {
-                ps.setString(index, priorite);
-            }
+            ps.setString(1, statut);
+            ps.setString(2, priorite);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -184,7 +169,7 @@ public class TicketDAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors du filtrage des tickets: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors du filtrage combiné: " + e.getMessage(), e);
         }
 
         return list;
@@ -206,7 +191,7 @@ public class TicketDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la mise à jour du ticket: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la mise à jour: " + e.getMessage(), e);
         }
     }
 
@@ -221,7 +206,7 @@ public class TicketDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de la suppression du ticket: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors de la suppression: " + e.getMessage(), e);
         }
     }
 
@@ -238,8 +223,14 @@ public class TicketDAO {
                 stats.put(rs.getString("statut"), rs.getInt("count"));
             }
 
+            // Initialiser les statuts manquants à 0
+            stats.putIfAbsent("open", 0);
+            stats.putIfAbsent("in_progress", 0);
+            stats.putIfAbsent("resolved", 0);
+            stats.putIfAbsent("closed", 0);
+
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors du comptage des tickets: " + e.getMessage(), e);
+            throw new RuntimeException("Erreur lors du comptage: " + e.getMessage(), e);
         }
 
         return stats;

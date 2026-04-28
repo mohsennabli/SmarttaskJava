@@ -1,5 +1,10 @@
+/* ============================================
+   SMARTTASK - styles.css
+   Interface d'authentification (mode sombre)
+   ============================================ */
+
 .app-root {
-    -fx-background-color: linear-gradient(to bottom right, #1f232a, #171a1f);
+    -fx-background-color: #1a1a2e;
     -fx-font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
 }
 
@@ -28,6 +33,35 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 20, 0.2, 0, 6);
     -fx-padding: 24;
     -fx-spacing: 14;
+}
+
+.page-header {
+    -fx-padding: 2 2 10 2;
+}
+
+.dashboard-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #b9c0cb;
+}
+
+.toolbar {
+    -fx-padding: 0;
+}
+
+.table-surface {
+    -fx-background-color: #2f343e;
+    -fx-background-radius: 10;
+    -fx-border-color: #4b5563;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+.stats-pill {
+    -fx-background-color: #313744;
+    -fx-background-radius: 999;
+    -fx-padding: 8 14;
+    -fx-border-color: #4b5563;
+    -fx-border-radius: 999;
 }
 
 .page-container {
@@ -157,7 +191,19 @@
     -fx-font-size: 13px;
 }
 
-.check-box {
-    -fx-text-fill: #e5e7eb;
+.stats-title {
+    -fx-text-fill: #f3f4f6;
+    -fx-font-weight: 600;
 }
 
+.stats-note {
+    -fx-text-fill: #b9c0cb;
+    -fx-font-size: 12px;
+}
+
+.check-box {
+    -fx-text-fill: #e5e7eb;
+
+
+
+}

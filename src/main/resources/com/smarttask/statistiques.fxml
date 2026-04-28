@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20" alignment="TOP_CENTER"
+      style="-fx-padding: 25; -fx-background-color: #eef2ff;"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.smarttask.controller.StatistiquesController">
+
+    <!-- ========== HEADER ========== -->
+    <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-background-color: #1e40af; -fx-padding: 15 20; -fx-background-radius: 16;">
+        <Label text="📊" style="-fx-font-size: 28px;"/>
+        <VBox>
+            <Label text="Tableau de bord statistique" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label text="Analyse des performances" style="-fx-font-size: 12px; -fx-text-fill: #93c5fd;"/>
+        </VBox>
+    </HBox>
+
+    <!-- ========== CARTES STATISTIQUES ========== -->
+    <GridPane hgap="20" vgap="20">
+        <VBox alignment="CENTER" spacing="8" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+              GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="📊" style="-fx-font-size: 32px;"/>
+            <Label fx:id="lblTotalTickets" text="0" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2563eb;"/>
+            <Label text="Total tickets" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+        </VBox>
+
+        <VBox alignment="CENTER" spacing="8" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+              GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="✅" style="-fx-font-size: 32px;"/>
+            <Label fx:id="lblTauxResolution" text="0%" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #22c55e;"/>
+            <Label text="Taux résolution" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+        </VBox>
+
+        <VBox alignment="CENTER" spacing="8" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+              GridPane.columnIndex="2" GridPane.rowIndex="0">
+            <Label text="⏱️" style="-fx-font-size: 32px;"/>
+            <Label fx:id="lblTempsMoyen" text="0 h" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #eab308;"/>
+            <Label text="Temps moyen résolution" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+        </VBox>
+    </GridPane>
+
+    <!-- ========== GRAPHIQUES ========== -->
+    <GridPane hgap="20" vgap="20">
+        <!-- Graphique circulaire (Statuts) -->
+        <VBox spacing="10" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+              GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="📈 Répartition par statut" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e3a8a;"/>
+            <PieChart fx:id="statutPieChart" prefHeight="300" prefWidth="350"/>
+        </VBox>
+
+        <!-- Graphique à barres (Priorités) -->
+        <VBox spacing="10" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+              GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="📊 Répartition par priorité" style="-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1e3a8a;"/>
+            <BarChart fx:id="prioriteBarChart" prefHeight="300" prefWidth="350">
+                <xAxis>
+                    <CategoryAxis fx:id="xAxis" label="Priorité"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis fx:id="yAxis" label="Nombre de tickets"/>
+                </yAxis>
+            </BarChart>
+        </VBox>
+    </GridPane>
+
+    <!-- ========== DÉTAIL DES STATUTS ========== -->
+    <GridPane hgap="20" vgap="15" style="-fx-background-color: white; -fx-background-radius: 16; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);">
+
+        <Label text="🔵 Tickets ouverts :" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        <Label fx:id="lblTicketsOuverts" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"
+               style="-fx-font-weight: bold; -fx-text-fill: #eab308; -fx-font-size: 18px;"/>
+
+        <Label text="🔄 Tickets en cours :" GridPane.columnIndex="2" GridPane.rowIndex="0" style="-fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        <Label fx:id="lblTicketsEnCours" text="0" GridPane.columnIndex="3" GridPane.rowIndex="0"
+               style="-fx-font-weight: bold; -fx-text-fill: #3b82f6; -fx-font-size: 18px;"/>
+
+        <Label text="✅ Tickets résolus :" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        <Label fx:id="lblTicketsResolus" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1"
+               style="-fx-font-weight: bold; -fx-text-fill: #22c55e; -fx-font-size: 18px;"/>
+
+        <Label text="🔘 Tickets fermés :" GridPane.columnIndex="2" GridPane.rowIndex="1" style="-fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        <Label fx:id="lblTicketsFermes" text="0" GridPane.columnIndex="3" GridPane.rowIndex="1"
+               style="-fx-font-weight: bold; -fx-text-fill: #64748b; -fx-font-size: 18px;"/>
+
+    </GridPane>
+
+</VBox>

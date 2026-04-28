@@ -11,16 +11,15 @@ import java.io.IOException;
 public class MainApp extends Application {
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/com/smarttask/ticket.fxml"));
-        stage.setTitle("SmartTask");
-        stage.setScene(new Scene(root));
-        stage.setMaximized(true);
-        stage.show();
-    }
+        Scene scene = new Scene(root, 1200, 700);  // Hauteur fixe
 
+        primaryStage.setTitle("SmartTask");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
     public static void main(String[] args) {
         launch(args);
     }
 }
-

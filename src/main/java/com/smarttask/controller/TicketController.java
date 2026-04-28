@@ -6,11 +6,14 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 
 import java.util.Date;
-import java.util.Optional;
 
 public class TicketController {
 
@@ -56,6 +59,18 @@ public class TicketController {
     @FXML
     private Label lblStats;
 
+    @FXML
+    private Label totalTicketsLabel;
+
+    @FXML
+    private Label openTicketsLabel;
+
+    @FXML
+    private Label progressTicketsLabel;
+
+    @FXML
+    private Label resolvedTicketsLabel;
+
     private TicketDAO dao;
     private ObservableList<Ticket> ticketList;
 
@@ -69,6 +84,9 @@ public class TicketController {
         loadTickets();
         setupSelectionListener();
         updateStats();
+
+        // Double-clic pour ouvrir les commentaires
+        setupDoubleClickToOpenComments();
     }
 
     private void setupTableColumns() {
@@ -78,7 +96,6 @@ public class TicketController {
         colPriorite.setCellValueFactory(new PropertyValueFactory<>("priorite"));
         colDate.setCellValueFactory(new PropertyValueFactory<>("dateCreation"));
 
-        // Formater la colonne date
         colDate.setCellFactory(column -> new TableCell<Ticket, Date>() {
             @Override
             protected void updateItem(Date item, boolean empty) {
@@ -95,19 +112,18 @@ public class TicketController {
     }
 
     private void setupComboBoxes() {
-        // Statuts possibles
+        // ComboBox pour le formulaire
         statutCombo.setItems(FXCollections.observableArrayList(
                 "open", "in_progress", "resolved", "closed"
         ));
         statutCombo.setValue("open");
 
-        // Priorités possibles
         prioriteCombo.setItems(FXCollections.observableArrayList(
                 "low", "medium", "high", "urgent"
         ));
         prioriteCombo.setValue("medium");
 
-        // Filtres
+        // ComboBox pour les filtres (avec option "Tous")
         filterStatutCombo.setItems(FXCollections.observableArrayList(
                 "Tous", "open", "in_progress", "resolved", "closed"
         ));
@@ -118,7 +134,7 @@ public class TicketController {
         ));
         filterPrioriteCombo.setValue("Tous");
 
-        // Listeners pour les filtres
+        // Listeners pour appliquer les filtres automatiquement
         filterStatutCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         filterPrioriteCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
     }
@@ -131,6 +147,19 @@ public class TicketController {
                     }
                 }
         );
+    }
+
+    private void setupDoubleClickToOpenComments() {
+        ticketTable.setRowFactory(tv -> {
+            TableRow<Ticket> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    Ticket ticket = row.getItem();
+                    openCommentaireInterface(ticket);
+                }
+            });
+            return row;
+        });
     }
 
     private void displayTicketDetails(Ticket ticket) {
@@ -149,42 +178,66 @@ public class TicketController {
         }
     }
 
-    private void applyFilters() {
+    // ========== MÉTHODES DE FILTRAGE ==========
+
+    @FXML
+    public void applyFilters() {
         String statut = filterStatutCombo.getValue();
         String priorite = filterPrioriteCombo.getValue();
 
-        if (("Tous".equals(statut) || statut == null) &&
-                ("Tous".equals(priorite) || priorite == null)) {
-            loadTickets();
-        } else if (!"Tous".equals(statut) && "Tous".equals(priorite)) {
-            try {
-                ticketList.setAll(dao.filterByStatut(statut));
-            } catch (Exception e) {
-                showAlert("Erreur", "Erreur lors du filtrage: " + e.getMessage(),
-                        Alert.AlertType.ERROR);
-            }
-        } else if ("Tous".equals(statut) && !"Tous".equals(priorite)) {
-            try {
-                ticketList.setAll(dao.filterByPriorite(priorite));
-            } catch (Exception e) {
-                showAlert("Erreur", "Erreur lors du filtrage: " + e.getMessage(),
-                        Alert.AlertType.ERROR);
-            }
-        } else {
-            try {
-                ticketList.setAll(dao.filter(statut, priorite));
-            } catch (Exception e) {
-                showAlert("Erreur", "Erreur lors du filtrage: " + e.getMessage(),
-                        Alert.AlertType.ERROR);
-            }
-        }
+        boolean filterStatut = statut != null && !"Tous".equals(statut);
+        boolean filterPriorite = priorite != null && !"Tous".equals(priorite);
 
-        updateStats();
+        try {
+            if (filterStatut && filterPriorite) {
+                ticketList.setAll(dao.filter(statut, priorite));
+            } else if (filterStatut) {
+                ticketList.setAll(dao.filterByStatut(statut));
+            } else if (filterPriorite) {
+                ticketList.setAll(dao.filterByPriorite(priorite));
+            } else {
+                ticketList.setAll(dao.getAll());
+            }
+            updateStats();
+        } catch (Exception e) {
+            showAlert("Erreur", "Erreur lors du filtrage: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     @FXML
+    public void refresh() {
+        applyFilters();
+    }
+
+    @FXML
+    public void clearFilters() {
+        filterStatutCombo.setValue("Tous");
+        filterPrioriteCombo.setValue("Tous");
+        searchField.clear();
+        applyFilters();
+    }
+
+    @FXML
+    public void searchTickets() {
+        String keyword = searchField.getText().trim();
+
+        if (keyword.isEmpty()) {
+            applyFilters();
+            return;
+        }
+
+        try {
+            ticketList.setAll(dao.search(keyword));
+            updateStats();
+        } catch (Exception e) {
+            showAlert("Erreur", "Erreur lors de la recherche: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    // ========== CRUD ==========
+
+    @FXML
     public void addTicket() {
-        // Validation
         if (!validateInput()) {
             return;
         }
@@ -199,8 +252,7 @@ public class TicketController {
         try {
             dao.add(ticket);
             clearForm();
-            applyFilters(); // Rafraîchir avec les filtres actuels
-            updateStats();
+            applyFilters();
             showAlert("Succès", "Ticket ajouté avec succès!", Alert.AlertType.INFORMATION);
         } catch (Exception e) {
             showAlert("Erreur", "Impossible d'ajouter le ticket: " + e.getMessage(),
@@ -256,41 +308,14 @@ public class TicketController {
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
                 dao.delete(selected.getId());
-                applyFilters(); // Rafraîchir avec les filtres actuels
+                applyFilters();
                 clearForm();
-                updateStats();
                 showAlert("Succès", "Ticket supprimé avec succès!", Alert.AlertType.INFORMATION);
             } catch (Exception e) {
                 showAlert("Erreur", "Impossible de supprimer le ticket: " + e.getMessage(),
                         Alert.AlertType.ERROR);
             }
         }
-    }
-
-    @FXML
-    public void searchTickets() {
-        String keyword = searchField.getText().trim();
-
-        if (keyword.isEmpty()) {
-            applyFilters();
-            return;
-        }
-
-        try {
-            ticketList.setAll(dao.search(keyword));
-            updateStats();
-        } catch (Exception e) {
-            showAlert("Erreur", "Erreur lors de la recherche: " + e.getMessage(),
-                    Alert.AlertType.ERROR);
-        }
-    }
-
-    @FXML
-    public void clearFilters() {
-        filterStatutCombo.setValue("Tous");
-        filterPrioriteCombo.setValue("Tous");
-        searchField.clear();
-        loadTickets();
     }
 
     @FXML
@@ -302,12 +327,109 @@ public class TicketController {
         ticketTable.getSelectionModel().clearSelection();
     }
 
+    // ========== NAVIGATION ==========
+
     @FXML
-    public void refresh() {
-        loadTickets();
-        updateStats();
-        showAlert("Info", "Liste des tickets rafraîchie", Alert.AlertType.INFORMATION);
+    public void openCommentaires() {
+        Ticket selected = ticketTable.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            showAlert("Aucune sélection", "Veuillez sélectionner un ticket pour voir ses commentaires.",
+                    Alert.AlertType.WARNING);
+            return;
+        }
+
+        openCommentaireInterface(selected);
     }
+
+    private void openCommentaireInterface(Ticket ticket) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/Commentaire.fxml"));
+            Parent root = loader.load();
+
+            CommentaireController commentaireController = loader.getController();
+            commentaireController.setTicketId(ticket.getId());
+            commentaireController.setTicketTitle(ticket.getTitre());
+
+            Stage stage = new Stage();
+            stage.setTitle("Commentaires - Ticket #" + ticket.getId() + " : " + ticket.getTitre());
+            stage.setScene(new Scene(root, 750, 550));
+            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            stage.initOwner(ticketTable.getScene().getWindow());
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible d'ouvrir les commentaires: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    public void openStatistiques() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/statistiques.fxml"));
+            Parent root = loader.load();
+
+            StatistiquesController statsController = loader.getController();
+            statsController.setTickets(ticketList);
+
+            Stage stage = new Stage();
+            stage.setTitle("📊 Tableau de bord - SmartTask");
+            stage.setScene(new Scene(root, 900, 750));
+            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            stage.initOwner(ticketTable.getScene().getWindow());
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible d'ouvrir les statistiques: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    public void openChatbot() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/chatbot.fxml"));
+            Parent root = loader.load();
+
+            ChatbotController chatbotController = loader.getController();
+            chatbotController.setTickets(ticketList);
+
+            Stage stage = new Stage();
+            stage.setTitle("🤖 Assistant SmartTask");
+            stage.setScene(new Scene(root, 480, 600));
+            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            stage.initOwner(ticketTable.getScene().getWindow());
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible d'ouvrir l'assistant: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    public void openCalendar() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/calendar.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("📅 Calendrier des tickets - SmartTask");
+            stage.setScene(new Scene(root, 1000, 700));
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Impossible d'ouvrir le calendrier: " + e.getMessage(),
+                    Alert.AlertType.ERROR);
+        }
+    }
+
+    // ========== UTILITAIRES ==========
 
     private boolean validateInput() {
         if (titreField.getText() == null || titreField.getText().trim().isEmpty()) {
@@ -328,6 +450,12 @@ public class TicketController {
         try {
             var stats = dao.countByStatut();
             int total = ticketList.size();
+
+            if (totalTicketsLabel != null) totalTicketsLabel.setText(String.valueOf(total));
+            if (openTicketsLabel != null) openTicketsLabel.setText(String.valueOf(stats.getOrDefault("open", 0)));
+            if (progressTicketsLabel != null) progressTicketsLabel.setText(String.valueOf(stats.getOrDefault("in_progress", 0)));
+            if (resolvedTicketsLabel != null) resolvedTicketsLabel.setText(String.valueOf(stats.getOrDefault("resolved", 0)));
+
             lblStats.setText(String.format("📊 Total: %d tickets | Open: %d | In Progress: %d | Resolved: %d | Closed: %d",
                     total,
                     stats.getOrDefault("open", 0),
