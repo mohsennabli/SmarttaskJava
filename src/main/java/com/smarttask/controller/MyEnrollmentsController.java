@@ -1,9 +1,11 @@
 package com.smarttask.controller;
 
+import com.smarttask.model.EnrollmentTaskRow;
 import com.smarttask.model.InscriptionRow;
 import com.smarttask.service.CertificateGenerationResult;
 import com.smarttask.service.InscriptionService;
 import com.smarttask.service.ProgressUpdateResult;
+import com.smarttask.service.TaskCompletionResult;
 import com.smarttask.util.AppSession;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -68,6 +70,24 @@ public class MyEnrollmentsController implements Initializable {
     @FXML
     private Button backButton;
 
+    @FXML
+    private TableView<EnrollmentTaskRow> tasksTable;
+
+    @FXML
+    private TableColumn<EnrollmentTaskRow, String> colTaskTitle;
+
+    @FXML
+    private TableColumn<EnrollmentTaskRow, String> colTaskStatus;
+
+    @FXML
+    private TableColumn<EnrollmentTaskRow, String> colTaskDescription;
+
+    @FXML
+    private Button markDoneButton;
+
+    @FXML
+    private Button markUndoneButton;
+
     private final InscriptionService inscriptionService = new InscriptionService();
 
     @Override
@@ -106,6 +126,13 @@ public class MyEnrollmentsController implements Initializable {
 
         progressSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 0, 1));
 
+        colTaskTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
+        colTaskDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
+        colTaskStatus.setCellValueFactory(data ->
+                new ReadOnlyStringWrapper(data.getValue().isCompleted() ? "Done" : "Pending"));
+
+        tasksTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> updateTaskButtonsState(n));
+
         enrollmentsTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> onRowSelected(n));
 
         loadTable();
@@ -116,11 +143,15 @@ public class MyEnrollmentsController implements Initializable {
             progressSpinner.getValueFactory().setValue(0);
             generateCertificateButton.setDisable(true);
             updateProgressButton.setDisable(true);
+            tasksTable.setItems(FXCollections.observableArrayList());
+            markDoneButton.setDisable(true);
+            markUndoneButton.setDisable(true);
             return;
         }
         progressSpinner.getValueFactory().setValue(row.getProgression());
-        updateProgressButton.setDisable(false);
+        updateProgressButton.setDisable(true);
         generateCertificateButton.setDisable(!inscriptionService.canGenerateCertificate(row));
+        loadTasksForEnrollment(row.getInscriptionId());
     }
 
     private void loadTable() {
@@ -166,6 +197,58 @@ public class MyEnrollmentsController implements Initializable {
                 enrollmentsTable.getSelectionModel().select(r);
                 return;
             }
+        }
+    }
+
+    private void loadTasksForEnrollment(int inscriptionId) {
+        List<EnrollmentTaskRow> tasks = inscriptionService.listTasksForEnrollment(inscriptionId);
+        tasksTable.setItems(FXCollections.observableArrayList(tasks));
+        if (!tasks.isEmpty()) {
+            tasksTable.getSelectionModel().selectFirst();
+        } else {
+            updateTaskButtonsState(null);
+        }
+    }
+
+    private void updateTaskButtonsState(EnrollmentTaskRow task) {
+        if (task == null) {
+            markDoneButton.setDisable(true);
+            markUndoneButton.setDisable(true);
+            return;
+        }
+        markDoneButton.setDisable(task.isCompleted());
+        markUndoneButton.setDisable(!task.isCompleted());
+    }
+
+    @FXML
+    private void handleMarkDone(ActionEvent event) {
+        toggleTaskCompletion(true);
+    }
+
+    @FXML
+    private void handleMarkUndone(ActionEvent event) {
+        toggleTaskCompletion(false);
+    }
+
+    private void toggleTaskCompletion(boolean completed) {
+        InscriptionRow enrollment = enrollmentsTable.getSelectionModel().getSelectedItem();
+        EnrollmentTaskRow task = tasksTable.getSelectionModel().getSelectedItem();
+        if (enrollment == null || task == null) {
+            showAlert(Alert.AlertType.WARNING, "Selection", "Select enrollment and task first.");
+            return;
+        }
+        TaskCompletionResult result = inscriptionService.setTaskCompletion(
+                enrollment.getInscriptionId(), task.getTaskId(), completed
+        );
+        switch (result) {
+            case SUCCESS -> {
+                loadTable();
+                selectByInscriptionId(enrollment.getInscriptionId());
+            }
+            case NOT_LOGGED_IN -> showAlert(Alert.AlertType.ERROR, "Session", "You must be logged in.");
+            case NOT_FOUND -> showAlert(Alert.AlertType.ERROR, "Not found", "Enrollment not found.");
+            case FORBIDDEN -> showAlert(Alert.AlertType.ERROR, "Forbidden", "You cannot modify this enrollment.");
+            case DB_ERROR -> showAlert(Alert.AlertType.ERROR, "Error", "Could not update task completion.");
         }
     }
 

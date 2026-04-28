@@ -24,7 +24,7 @@
                     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                         <Label styleClass="section-title" text="My Enrollments"/>
                         <Label styleClass="dashboard-subtitle"
-                               text="Update your progress (0–100). Generate a certificate when you reach 100%."/>
+                               text="Complete formation tasks to increase progress until 100%."/>
                     </VBox>
                     <Button fx:id="backButton" onAction="#handleBack" styleClass="secondary-button" text="Back"/>
                 </HBox>
@@ -44,6 +44,18 @@
                             text="Update Progress"/>
                     <Button fx:id="generateCertificateButton" onAction="#handleGenerateCertificate"
                             styleClass="secondary-button" text="Generate Certificate"/>
+                </HBox>
+                <Label styleClass="stats-title" text="Formation Tasks"/>
+                <TableView fx:id="tasksTable" prefHeight="180.0" styleClass="table-surface">
+                    <columns>
+                        <TableColumn fx:id="colTaskTitle" prefWidth="360.0" text="Task"/>
+                        <TableColumn fx:id="colTaskStatus" prefWidth="120.0" text="Status"/>
+                        <TableColumn fx:id="colTaskDescription" prefWidth="420.0" text="Description"/>
+                    </columns>
+                </TableView>
+                <HBox alignment="CENTER_LEFT" spacing="12.0">
+                    <Button fx:id="markDoneButton" onAction="#handleMarkDone" styleClass="primary-button" text="Mark Done"/>
+                    <Button fx:id="markUndoneButton" onAction="#handleMarkUndone" styleClass="secondary-button" text="Mark Undone"/>
                 </HBox>
             </VBox>
         </VBox>

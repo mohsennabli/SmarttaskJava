@@ -1,7 +1,9 @@
 package com.smarttask.service;
 
 import com.smarttask.dao.FormationDAO;
+import com.smarttask.dao.EnrollmentTaskDAO;
 import com.smarttask.dao.InscriptionDAO;
+import com.smarttask.model.EnrollmentTaskRow;
 import com.smarttask.model.Formation;
 import com.smarttask.model.Inscription;
 import com.smarttask.model.InscriptionRow;
@@ -19,6 +21,8 @@ public class InscriptionService {
 
     private final InscriptionDAO inscriptionDAO = new InscriptionDAO();
     private final FormationDAO formationDAO = new FormationDAO();
+    private final EnrollmentTaskDAO enrollmentTaskDAO = new EnrollmentTaskDAO();
+    private final FormationInscriptionNotifier notifier = new FormationInscriptionNotifier();
 
     public EnrollmentResult enrollCurrentUser(int formationId) {
         User user = AppSession.getCurrentUser();
@@ -44,6 +48,8 @@ public class InscriptionService {
         if (newId < 0) {
             return EnrollmentResult.DB_ERROR;
         }
+        notifier.sendInscriptionConfirmation(user, formation, DEFAULT_STATUT);
+        notifier.openFormationInGoogleCalendar(formation);
         return EnrollmentResult.SUCCESS;
     }
 
@@ -120,11 +126,51 @@ public class InscriptionService {
         if (!inscriptionDAO.markCertificatIssued(inscriptionId, user.getIduser())) {
             return CertificateGenerationResult.DB_ERROR;
         }
+        notifier.sendCertificateIssued(user, formationOpt.get());
         return CertificateGenerationResult.SUCCESS;
     }
 
     public boolean isEnrolledIn(int userId, int formationId) {
         return inscriptionDAO.existsByUserAndFormation(userId, formationId);
+    }
+
+    public List<EnrollmentTaskRow> listTasksForEnrollment(int inscriptionId) {
+        User user = AppSession.getCurrentUser();
+        if (user == null) {
+            return List.of();
+        }
+        Optional<Inscription> opt = inscriptionDAO.findById(inscriptionId);
+        if (opt.isEmpty()) {
+            return List.of();
+        }
+        Inscription ins = opt.get();
+        if (ins.getUserId() != user.getIduser()) {
+            return List.of();
+        }
+        return enrollmentTaskDAO.findTasksForInscription(inscriptionId, ins.getFormationId());
+    }
+
+    public TaskCompletionResult setTaskCompletion(int inscriptionId, int taskId, boolean completed) {
+        User user = AppSession.getCurrentUser();
+        if (user == null) {
+            return TaskCompletionResult.NOT_LOGGED_IN;
+        }
+        Optional<Inscription> opt = inscriptionDAO.findById(inscriptionId);
+        if (opt.isEmpty()) {
+            return TaskCompletionResult.NOT_FOUND;
+        }
+        Inscription ins = opt.get();
+        if (ins.getUserId() != user.getIduser()) {
+            return TaskCompletionResult.FORBIDDEN;
+        }
+        if (!enrollmentTaskDAO.upsertCompletion(inscriptionId, taskId, completed)) {
+            return TaskCompletionResult.DB_ERROR;
+        }
+        int progress = enrollmentTaskDAO.computeProgressPercent(inscriptionId, ins.getFormationId());
+        if (!inscriptionDAO.updateProgression(inscriptionId, user.getIduser(), progress)) {
+            return TaskCompletionResult.DB_ERROR;
+        }
+        return TaskCompletionResult.SUCCESS;
     }
 
     public InscriptionDAO getInscriptionDAO() {

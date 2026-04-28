@@ -6,6 +6,8 @@ module com.smarttask {
     requires kernel;
     requires io;
     requires layout;
+    requires jakarta.mail;
+    requires java.desktop;
 
     opens com.smarttask to javafx.graphics, javafx.fxml;
     opens com.smarttask.controller to javafx.fxml;
