@@ -31,7 +31,7 @@ public class GitHubOAuthService {
     private static final String EMAILS_ENDPOINT = "https://api.github.com/user/emails";
 
     private static final String CLIENT_ID = readConfig("SMARTTASK_GITHUB_CLIENT_ID", "Ov23liEk3AZXEH5Rnlz0");
-    private static final String CLIENT_SECRET = readConfig("SMARTTASK_GITHUB_CLIENT_SECRET", "092377b0b5ea40668bf474a91ff9016efc465628");
+    private static final String CLIENT_SECRET = readConfig("SMARTTASK_GITHUB_CLIENT_SECRET", "d63ed9147841eea4962cf7e1db2462037303aea1");
     private static final String REDIRECT_URI = readConfig(
             "SMARTTASK_GITHUB_REDIRECT_URI",
             "http://127.0.0.1:8766/oauth/github/callback"

@@ -1,0 +1,6 @@
+# Python dependencies for face recognition features
+# Note: `face_recognition` depends on `dlib` which often requires system build tools.
+opencv-python>=4.7.0
+numpy>=1.23
+face_recognition>=1.3.0
+

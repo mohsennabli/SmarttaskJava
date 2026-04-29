@@ -18,6 +18,7 @@
         <mysql.connector.version>8.4.0</mysql.connector.version>
         <jbcrypt.version>0.4</jbcrypt.version>
         <itext.version>7.2.5</itext.version>
+        <gson.version>2.10.1</gson.version>
     </properties>
 
     <dependencies>
@@ -55,6 +56,21 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>layout</artifactId>
             <version>${itext.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>jakarta.activation</artifactId>
+            <version>2.0.1</version>
         </dependency>
     </dependencies>
 

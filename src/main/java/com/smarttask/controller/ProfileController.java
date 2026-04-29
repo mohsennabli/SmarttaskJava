@@ -3,11 +3,13 @@ package com.smarttask.controller;
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
 import com.smarttask.util.AppSession;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -48,6 +50,9 @@ public class ProfileController implements Initializable {
     private TextField emailField;
 
     @FXML
+    private ChoiceBox<String> typeChoice;
+
+    @FXML
     private PasswordField currentPasswordField;
 
     @FXML
@@ -67,6 +72,7 @@ public class ProfileController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        typeChoice.setItems(FXCollections.observableArrayList("manager", "collaborator"));
         applyAvatarCircleClip();
 
         currentUser = AppSession.getCurrentUser();
@@ -78,6 +84,11 @@ public class ProfileController implements Initializable {
 
         nameField.setText(currentUser.getName());
         emailField.setText(currentUser.getEmail());
+        if (currentUser.getType() != null && !currentUser.getType().isBlank()) {
+            typeChoice.setValue(currentUser.getType());
+        } else {
+            typeChoice.setValue("collaborator");
+        }
 
         if (currentUser.getAvatarName() != null && !currentUser.getAvatarName().isBlank()) {
             Path avatarPath = AVATAR_UPLOADS_DIR.resolve(currentUser.getAvatarName());
@@ -134,6 +145,7 @@ public class ProfileController implements Initializable {
 
         String name = nameField.getText() == null ? "" : nameField.getText().trim();
         String email = emailField.getText() == null ? "" : emailField.getText().trim();
+        String type = typeChoice.getValue();
 
         if (name.isEmpty() || email.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", "Name and email are required.");
@@ -142,6 +154,7 @@ public class ProfileController implements Initializable {
 
         currentUser.setName(name);
         currentUser.setEmail(email);
+        currentUser.setType(type == null ? "collaborator" : type);
 
         String currentPassword = currentPasswordField.getText() == null ? "" : currentPasswordField.getText().trim();
         String newPassword = newPasswordField.getText() == null ? "" : newPasswordField.getText().trim();

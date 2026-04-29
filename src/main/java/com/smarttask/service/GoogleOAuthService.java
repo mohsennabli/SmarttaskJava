@@ -27,8 +27,8 @@ public class GoogleOAuthService {
     private static final String TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
     private static final String USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
 
-    private static final String CLIENT_ID = readConfig("SMARTTASK_GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID");
-    private static final String CLIENT_SECRET = readConfig("SMARTTASK_GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET");
+    private static final String CLIENT_ID = readConfig("SMARTTASK_GOOGLE_CLIENT_ID", "886391608156-fc05m6jvhgmp19k6liandj2ccrrrehjg.apps.googleusercontent.com");
+    private static final String CLIENT_SECRET = readConfig("SMARTTASK_GOOGLE_CLIENT_SECRET", "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");
     private static final String REDIRECT_URI = readConfig(
             "SMARTTASK_GOOGLE_REDIRECT_URI",
             "http://127.0.0.1:8765/oauth/google/callback"

@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,6 +158,45 @@ public class UserDAO {
             }
         } catch (SQLException e) {
             System.err.println("Failed to update profile: " + e.getMessage());
+            return false;
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+    }
+
+    public boolean storeResetToken(int userId, String resetToken, java.time.LocalDateTime expiresAt) {
+        String sql = "UPDATE user SET reset_token=?, reset_token_expires_at=? WHERE iduser=?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, resetToken);
+                statement.setTimestamp(2, expiresAt == null ? null : Timestamp.valueOf(expiresAt));
+                statement.setInt(3, userId);
+                return statement.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to store reset token: " + e.getMessage());
+            return false;
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+    }
+
+    public boolean updatePasswordAndClearResetToken(int userId, String hashedPassword) {
+        String sql = "UPDATE user SET password=?, reset_token=NULL, reset_token_expires_at=NULL WHERE iduser=?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, hashedPassword);
+                statement.setInt(2, userId);
+                return statement.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to update password after reset: " + e.getMessage());
             return false;
         } finally {
             DatabaseConnection.closeConnection(connection);
@@ -361,6 +399,53 @@ public class UserDAO {
         return null;
     }
 
+    public User findById(int iduser) {
+        String sql = "SELECT * FROM user WHERE iduser = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, iduser);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return mapUser(resultSet);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to find user by ID: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return null;
+    }
+
+    public List<User> findUsersWithFaceEmbeddings() {
+        String sql = "SELECT * FROM user WHERE is_enabled = 1 AND face_embedding IS NOT NULL AND JSON_LENGTH(face_embedding) > 0 ORDER BY iduser ASC";
+        Connection connection = null;
+        List<User> users = new ArrayList<>();
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql);
+                 ResultSet resultSet = statement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    users.add(mapUser(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to fetch users with face embeddings: " + e.getMessage());
+            return new ArrayList<>();
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+
+        return users;
+    }
+
     public User upsertGoogleUser(String googleId, String email, String name) {
         User byGoogleId = findByGoogleId(googleId);
         if (byGoogleId != null) {
@@ -437,7 +522,7 @@ public class UserDAO {
                 String safeName = (name == null || name.isBlank()) ? email : name;
                 statement.setString(1, safeName);
                 statement.setString(2, email);
-                statement.setNull(3, Types.VARCHAR);
+                statement.setString(3, null);
                 statement.setString(4, "collaborator");
                 statement.setString(5, googleId);
                 statement.setString(6, "[]");
@@ -472,7 +557,7 @@ public class UserDAO {
                 String safeName = (name == null || name.isBlank()) ? email : name;
                 statement.setString(1, safeName);
                 statement.setString(2, email);
-                statement.setNull(3, Types.VARCHAR);
+                statement.setString(3, null);
                 statement.setString(4, "collaborator");
                 statement.setString(5, githubId);
                 statement.setString(6, "[]");

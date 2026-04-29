@@ -26,8 +26,6 @@
                         <Label styleClass="section-title" text="User Management"/>
                         <Label styleClass="dashboard-subtitle" text="Search, edit, enable, disable, or remove users from one place."/>
                     </VBox>
-                    <Button fx:id="formationsButton" onAction="#handleFormations" styleClass="primary-button"
-                            text="Formations"/>
                     <Button fx:id="logoutButton" onAction="#handleLogout" styleClass="secondary-button" text="Logout"/>
                 </HBox>
 
@@ -40,6 +38,7 @@
 
                 <TableView fx:id="usersTable" VBox.vgrow="ALWAYS" styleClass="table-surface">
                     <columns>
+                        <TableColumn fx:id="colId" prefWidth="90.0" text="ID"/>
                         <TableColumn fx:id="colName" prefWidth="220.0" text="Name"/>
                         <TableColumn fx:id="colEmail" prefWidth="320.0" text="Email"/>
                         <TableColumn fx:id="colType" prefWidth="140.0" text="Type"/>

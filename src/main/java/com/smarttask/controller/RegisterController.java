@@ -74,6 +74,11 @@ public class RegisterController implements Initializable {
 
         if (userDAO.register(user)) {
             showAlert(Alert.AlertType.INFORMATION, "Success", "Account created successfully!");
+            // Clear form
+            nameField.clear();
+            emailField.clear();
+            passwordField.clear();
+            typeChoice.setValue(null);
         } else {
             showAlert(Alert.AlertType.ERROR, "Error", "Registration failed. Please try again.");
         }
@@ -100,4 +105,6 @@ public class RegisterController implements Initializable {
         alert.showAndWait();
     }
 }
+
+
 

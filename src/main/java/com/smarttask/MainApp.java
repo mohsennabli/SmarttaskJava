@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import com.smarttask.util.DotEnvLoader;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -13,6 +14,8 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        DotEnvLoader.loadSmartTaskConfig();
+
         FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(
                 getClass().getResource("/com/smarttask/login.fxml"),
                 "Missing FXML: /com/smarttask/login.fxml"

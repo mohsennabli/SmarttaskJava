@@ -2,6 +2,7 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
+import com.smarttask.service.FaceRecognitionService;
 import com.smarttask.service.GitHubOAuthService;
 import com.smarttask.service.GitHubOAuthService.GitHubUserInfo;
 import com.smarttask.service.GoogleOAuthService;
@@ -18,7 +19,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
@@ -51,15 +54,22 @@ public class LoginController implements Initializable {
     private Button githubSignInButton;
 
     @FXML
+    private Button faceSignInButton;
+
+    @FXML
     private Hyperlink registerLink;
 
+    @FXML
+    private Hyperlink forgotPasswordLink;
+
     private final UserDAO userDAO = new UserDAO();
+    private final FaceRecognitionService faceRecognitionService = new FaceRecognitionService();
     private final GoogleOAuthService googleOAuthService = new GoogleOAuthService();
     private final GitHubOAuthService githubOAuthService = new GitHubOAuthService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Intentionally left empty for now.
+        // No reCAPTCHA configured - simple login form
     }
 
     @FXML
@@ -74,15 +84,16 @@ public class LoginController implements Initializable {
 
         User user = userDAO.login(email, password);
         if (user != null) {
-            AppSession.setCurrentUser(user);
-            try {
-                openUsersView();
-            } catch (IOException e) {
-                showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open users screen.");
-            }
+            completeLogin(user);
         } else {
             showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid credentials or account disabled.");
         }
+    }
+
+    @FXML
+    private void handleFaceSignIn(ActionEvent event) {
+        Stage faceStage = buildFaceLoginStage();
+        faceStage.showAndWait();
     }
 
     @FXML
@@ -95,6 +106,23 @@ public class LoginController implements Initializable {
             stage.show();
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open register screen.");
+        }
+    }
+
+    @FXML
+    private void handleForgotPassword(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/forgot-password.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Reset Password");
+            stage.initOwner((Stage) loginButton.getScene().getWindow());
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(new Scene(root, 560, 760));
+            stage.showAndWait();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open the password reset screen.");
         }
     }
 
@@ -228,17 +256,7 @@ public class LoginController implements Initializable {
                 return;
             }
 
-            if (!user.isEnabled()) {
-                showAlert(Alert.AlertType.ERROR, "Account Disabled", "Your account is disabled.");
-                return;
-            }
-
-            AppSession.setCurrentUser(user);
-            try {
-                openUsersView();
-            } catch (IOException e) {
-                showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open users screen.");
-            }
+            completeLogin(user);
         }));
     }
 
@@ -268,18 +286,105 @@ public class LoginController implements Initializable {
                 return;
             }
 
-            if (!user.isEnabled()) {
-                showAlert(Alert.AlertType.ERROR, "Account Disabled", "Your account is disabled.");
-                return;
-            }
-
-            AppSession.setCurrentUser(user);
-            try {
-                openUsersView();
-            } catch (IOException e) {
-                showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open users screen.");
-            }
+            completeLogin(user);
         }));
+    }
+
+    private Stage buildFaceLoginStage() {
+        Label title = new Label("Login with Face");
+        title.getStyleClass().add("title-text");
+
+        Label description = new Label("A webcam capture will open in a native camera window. Center your face, then press SPACE to capture and compare it with your stored embedding.");
+        description.setWrapText(true);
+        description.getStyleClass().add("subtitle-text");
+
+        Label statusLabel = new Label("Click Verify Face to begin.");
+        statusLabel.setWrapText(true);
+
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        progressIndicator.setVisible(false);
+        progressIndicator.setManaged(false);
+
+        Button verifyButton = new Button("Verify Face");
+        verifyButton.getStyleClass().add("primary-button");
+        verifyButton.setMaxWidth(Double.MAX_VALUE);
+
+        Button cancelButton = new Button("Cancel");
+        cancelButton.getStyleClass().add("secondary-button");
+        cancelButton.setMaxWidth(Double.MAX_VALUE);
+
+        VBox root = new VBox(12, title, description, statusLabel, progressIndicator, verifyButton, cancelButton);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(18));
+        root.getStyleClass().add("auth-card");
+
+        Stage ownerStage = (Stage) loginButton.getScene().getWindow();
+        Stage faceStage = new Stage();
+        faceStage.setTitle("SmartTask - Face Login");
+        faceStage.initOwner(ownerStage);
+        faceStage.initModality(Modality.APPLICATION_MODAL);
+        faceStage.setScene(new Scene(root, 520, 320));
+
+        verifyButton.setOnAction(e -> startFaceVerification(faceStage, statusLabel, progressIndicator, verifyButton, cancelButton));
+        cancelButton.setOnAction(e -> faceStage.close());
+
+        return faceStage;
+    }
+
+    private void startFaceVerification(Stage faceStage, Label statusLabel, ProgressIndicator progressIndicator,
+                                        Button verifyButton, Button cancelButton) {
+        verifyButton.setDisable(true);
+        cancelButton.setDisable(true);
+        progressIndicator.setVisible(true);
+        progressIndicator.setManaged(true);
+        statusLabel.setText("Opening webcam and comparing your face...");
+
+        CompletableFuture.supplyAsync(faceRecognitionService::loginWithFace).whenComplete((result, throwable) ->
+                Platform.runLater(() -> {
+                    progressIndicator.setVisible(false);
+                    progressIndicator.setManaged(false);
+                    verifyButton.setDisable(false);
+                    cancelButton.setDisable(false);
+
+                    if (throwable != null) {
+                        statusLabel.setText("Face login failed.");
+                        showAlert(Alert.AlertType.ERROR, "Face Login Failed", "Unable to complete face verification.");
+                        return;
+                    }
+
+                    if (result == null) {
+                        statusLabel.setText("Face login failed.");
+                        showAlert(Alert.AlertType.ERROR, "Face Login Failed", "The face verification process did not return a result.");
+                        return;
+                    }
+
+                    if (result.isSuccess()) {
+                        faceStage.close();
+                        completeLogin(result.getUser());
+                    } else {
+                        statusLabel.setText(result.getMessage());
+                        showAlert(Alert.AlertType.ERROR, "Face Login Failed", result.getMessage());
+                    }
+                }));
+    }
+
+    private void completeLogin(User user) {
+        if (user == null) {
+            showAlert(Alert.AlertType.ERROR, "Login Failed", "Unable to resolve the authenticated user.");
+            return;
+        }
+
+        if (!user.isEnabled()) {
+            showAlert(Alert.AlertType.ERROR, "Account Disabled", "Your account is disabled.");
+            return;
+        }
+
+        AppSession.startSession(user);
+        try {
+            openUsersView();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open users screen.");
+        }
     }
 
     private Stage buildOAuthStage(String title) {
@@ -321,4 +426,11 @@ public class LoginController implements Initializable {
         alert.showAndWait();
     }
 }
+
+
+
+
+
+
+
 
