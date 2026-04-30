@@ -1,209 +1,293 @@
 /* ============================================
-   SMARTTASK - styles.css
-   Interface d'authentification (mode sombre)
+   SMARTTASK - DARK SLATE THEME
+   Palette: #1f232a, #2b3038, #3d4450, #4b5563
    ============================================ */
 
-.app-root {
-    -fx-background-color: #1a1a2e;
-    -fx-font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
+/* ------------------- VARIABLES ------------------- */
+.root {
+    -fx-font-family: 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+
+    /* Backgrounds */
+    --bg-main: #1f232a;
+    --bg-deep: #171a1f;
+    --bg-card: #2b3038;
+    --bg-table: #2f343e;
+    --bg-row: #343a45;
+    --bg-row-alt: #313744;
+    --bg-field: #3a404b;
+    --bg-header: #3f4652;
+
+    /* Borders */
+    --border-card: #3d4450;
+    --border-main: #4b5563;
+    --border-hover: #6b7280;
+
+    /* Text */
+    --text-primary: #f3f4f6;
+    --text-button: #f9fafb;
+    --text-label: #e5e7eb;
+    --text-secondary: #b9c0cb;
+    --text-stats: #c5ccd6;
+    --text-placeholder: #9ca3af;
+
+    /* Buttons */
+    --btn-primary: #4b5563;
+    --btn-primary-hover: #6b7280;
+    --btn-secondary: #374151;
+    --btn-secondary-hover: #4b5563;
+    --btn-danger: #7f1d1d;
+    --btn-danger-hover: #991b1b;
+
+    /* Status */
+    --status-success: #15803d;
+    --status-danger: #b91c1c;
+
+    /* Avatar */
+    --avatar-bg: #d1d5db;
+    --avatar-border: #6b7280;
+
+    /* Effects */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
-.auth-shell {
-    -fx-padding: 32;
+/* ------------------- CONTENEUR PRINCIPAL ------------------- */
+.root-container {
+    -fx-background-color: linear-gradient(to bottom right, #1f232a, #171a1f);
 }
 
-.auth-card {
-    -fx-background-color: #2b3038;
-    -fx-background-radius: 14;
-    -fx-border-color: #3d4450;
-    -fx-border-radius: 14;
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 22, 0.25, 0, 8);
-    -fx-padding: 34;
-    -fx-spacing: 14;
-    -fx-max-width: 460;
+/* ------------------- CARTES ------------------- */
+.card {
+    -fx-background-color: var(--bg-card);
+    -fx-background-radius: 14px;
+    -fx-border-color: var(--border-card);
+    -fx-border-radius: 14px;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 15, 0.2, 0, 5);
+    -fx-padding: 20;
 }
 
-.page-card {
-    -fx-background-color: #2b3038;
-    -fx-background-radius: 14;
-    -fx-border-color: #3d4450;
-    -fx-border-radius: 14;
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 20, 0.2, 0, 6);
-    -fx-padding: 24;
-    -fx-spacing: 14;
+.card-header {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: var(--text-primary);
+    -fx-padding: 0 0 15 0;
+    -fx-border-color: var(--border-card);
+    -fx-border-width: 0 0 1 0;
 }
 
-.page-header {
-    -fx-padding: 2 2 10 2;
-}
-
-.dashboard-subtitle {
-    -fx-font-size: 13px;
-    -fx-text-fill: #b9c0cb;
-}
-
-.toolbar {
-    -fx-padding: 0;
-}
-
-.table-surface {
-    -fx-background-color: #2f343e;
-    -fx-background-radius: 10;
-    -fx-border-color: #4b5563;
-    -fx-border-radius: 10;
-    -fx-border-width: 1;
-}
-
-.stats-pill {
-    -fx-background-color: #313744;
-    -fx-background-radius: 999;
-    -fx-padding: 8 14;
-    -fx-border-color: #4b5563;
-    -fx-border-radius: 999;
-}
-
-.page-container {
-    -fx-padding: 24;
-}
-
-.title-text {
-    -fx-font-size: 30px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #f3f4f6;
-}
-
-.subtitle-text {
-    -fx-font-size: 14px;
-    -fx-text-fill: #b9c0cb;
-}
-
-.section-title {
-    -fx-font-size: 24px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #f3f4f6;
-}
-
-.form-field,
-.choice-box {
-    -fx-background-color: #3a404b;
-    -fx-text-fill: #f3f4f6;
-    -fx-prompt-text-fill: #9ca3af;
-    -fx-background-radius: 8;
-    -fx-border-color: #4b5563;
-    -fx-border-radius: 8;
-    -fx-border-width: 1;
-    -fx-padding: 10 12;
-}
-
-.form-field:focused,
-.choice-box:focused {
-    -fx-border-color: #9ca3af;
-}
-
-.primary-button,
-.secondary-button,
-.danger-button {
-    -fx-background-radius: 8;
+/* ------------------- BOUTONS ------------------- */
+.btn {
+    -fx-background-radius: 8px;
     -fx-font-weight: 600;
-    -fx-padding: 10 16;
-    -fx-text-fill: #f9fafb;
+    -fx-padding: 8 16;
+    -fx-text-fill: var(--text-button);
     -fx-cursor: hand;
 }
 
-.primary-button {
-    -fx-background-color: #4b5563;
+.btn-primary {
+    -fx-background-color: var(--btn-primary);
 }
 
-.primary-button:hover {
-    -fx-background-color: #6b7280;
+.btn-primary:hover {
+    -fx-background-color: var(--btn-primary-hover);
 }
 
-.secondary-button {
-    -fx-background-color: #374151;
+.btn-secondary {
+    -fx-background-color: var(--btn-secondary);
 }
 
-.secondary-button:hover {
-    -fx-background-color: #4b5563;
+.btn-secondary:hover {
+    -fx-background-color: var(--btn-secondary-hover);
 }
 
-.danger-button {
-    -fx-background-color: #7f1d1d;
+.btn-danger {
+    -fx-background-color: var(--btn-danger);
 }
 
-.danger-button:hover {
-    -fx-background-color: #991b1b;
+.btn-danger:hover {
+    -fx-background-color: var(--btn-danger-hover);
 }
 
-.link-text {
-    -fx-text-fill: #d1d5db;
-    -fx-border-color: transparent;
+/* ------------------- CHAMPS DE SAISIE ------------------- */
+.text-field, .text-area, .password-field {
+    -fx-background-color: var(--bg-field);
+    -fx-background-radius: 8px;
+    -fx-border-color: var(--border-main);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-text-fill: var(--text-primary);
+    -fx-prompt-text-fill: var(--text-placeholder);
+    -fx-padding: 10 12;
 }
 
-.link-text:hover {
-    -fx-text-fill: #f3f4f6;
+.text-field:focused, .text-area:focused, .password-field:focused {
+    -fx-border-color: var(--border-hover);
 }
 
+.text-area {
+    -fx-padding: 8;
+}
+
+.text-area .content {
+    -fx-background-color: var(--bg-field);
+}
+
+/* ------------------- COMBOBOX ------------------- */
+.combo-box {
+    -fx-background-color: var(--bg-field);
+    -fx-background-radius: 8px;
+    -fx-border-color: var(--border-main);
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-text-fill: var(--text-primary);
+    -fx-padding: 6 12;
+}
+
+.combo-box:focused {
+    -fx-border-color: var(--border-hover);
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: var(--text-primary);
+    -fx-background-color: var(--bg-field);
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: var(--bg-card);
+    -fx-background-radius: 8px;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: var(--border-main);
+}
+
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: var(--btn-primary);
+}
+
+/* ------------------- TABLEVIEW ------------------- */
 .table-view {
-    -fx-background-color: #343a45;
-    -fx-border-color: #4b5563;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
+    -fx-background-color: var(--bg-table);
+    -fx-background-radius: 10px;
+    -fx-border-color: var(--border-main);
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #3f4652;
-    -fx-background-radius: 8 8 0 0;
+    -fx-background-color: var(--bg-header);
+    -fx-background-radius: 10px 10px 0 0;
 }
 
-.table-view .column-header,
-.table-view .filler {
+.table-view .column-header {
     -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-border-color: var(--border-main);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 8;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #e5e7eb;
+    -fx-text-fill: var(--text-label);
     -fx-font-weight: 600;
-}
-
-.table-row-cell {
-    -fx-background-color: #343a45;
-    -fx-text-fill: #f3f4f6;
-}
-
-.table-row-cell:odd {
-    -fx-background-color: #313744;
-}
-
-.table-row-cell:selected {
-    -fx-background-color: #4b5563;
-}
-
-.table-cell {
-    -fx-text-fill: #f3f4f6;
-    -fx-border-color: transparent;
-}
-
-.stats-text {
-    -fx-text-fill: #c5ccd6;
     -fx-font-size: 13px;
 }
 
-.stats-title {
-    -fx-text-fill: #f3f4f6;
-    -fx-font-weight: 600;
+.table-view .table-row-cell {
+    -fx-background-color: var(--bg-row-alt);
+    -fx-border-color: var(--border-card);
+    -fx-border-width: 0 0 1 0;
 }
 
-.stats-note {
-    -fx-text-fill: #b9c0cb;
+.table-view .table-row-cell:odd {
+    -fx-background-color: var(--bg-row);
+}
+
+.table-view .table-row-cell:hover {
+    -fx-background-color: var(--border-main);
+    -fx-cursor: hand;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: var(--btn-primary);
+}
+
+.table-view .table-cell {
+    -fx-text-fill: var(--text-primary);
+    -fx-padding: 10 8;
+}
+
+/* ------------------- BADGES STATUT ------------------- */
+.badge-success {
+    -fx-background-color: var(--status-success);
+    -fx-text-fill: white;
+    -fx-background-radius: 20px;
+    -fx-padding: 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-danger {
+    -fx-background-color: var(--status-danger);
+    -fx-text-fill: white;
+    -fx-background-radius: 20px;
+    -fx-padding: 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-warning {
+    -fx-background-color: #d97706;
+    -fx-text-fill: white;
+    -fx-background-radius: 20px;
+    -fx-padding: 4 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+/* ------------------- LABELS ------------------- */
+.title-main {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: var(--text-primary);
+}
+
+.title-section {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: var(--text-primary);
+}
+
+.text-muted {
+    -fx-text-fill: var(--text-secondary);
     -fx-font-size: 12px;
 }
 
-.check-box {
-    -fx-text-fill: #e5e7eb;
+.text-stats {
+    -fx-text-fill: var(--text-stats);
+    -fx-font-size: 13px;
+}
 
+/* ------------------- AVATAR ------------------- */
+.avatar {
+    -fx-background-color: var(--avatar-bg);
+    -fx-background-radius: 50%;
+    -fx-border-color: var(--avatar-border);
+    -fx-border-width: 2px;
+    -fx-border-radius: 50%;
+}
 
+/* ------------------- SCROLLBAR ------------------- */
+.scroll-bar:vertical {
+    -fx-background-color: var(--bg-deep);
+    -fx-background-radius: 10px;
+}
 
+.scroll-bar:vertical .thumb {
+    -fx-background-color: var(--border-main);
+    -fx-background-radius: 10px;
+}
+
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: var(--border-hover);
 }

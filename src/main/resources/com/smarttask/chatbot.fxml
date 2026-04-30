@@ -5,51 +5,48 @@
 <?import javafx.scene.layout.*?>
 
 <VBox spacing="15" alignment="TOP_CENTER"
-      style="-fx-padding: 20; -fx-background-color: #eef2ff;"
+      style="-fx-padding: 20; -fx-background-color: #1f232a;"
+      stylesheets="@styles/app-theme.css"
       xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.smarttask.controller.ChatbotController">
 
     <!-- ========== HEADER ========== -->
-    <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-background-color: #1e40af; -fx-padding: 15 20; -fx-background-radius: 16;">
+    <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-background-color: #171a1f; -fx-padding: 15 20; -fx-border-radius: 14; -fx-border-color: #3d4450; -fx-border-width: 0 0 1 0;">
         <Label text="🤖" style="-fx-font-size: 32px;"/>
         <VBox>
-            <Label text="Assistant SmartTask" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
-            <Label fx:id="statusLabel" text="🤖 En ligne" style="-fx-font-size: 11px; -fx-text-fill: #93c5fd;"/>
+            <Label text="Assistant SmartTask" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #f3f4f6;"/>
+            <Label fx:id="statusLabel" text="🤖 En ligne" style="-fx-font-size: 11px; -fx-text-fill: #b9c0cb;"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="🗑️ Effacer" onAction="#clearChat"
-                style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 8 16; -fx-cursor: hand;"/>
+                style="-fx-background-color: #7f1d1d; -fx-text-fill: #f9fafb; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 8 16; -fx-cursor: hand;"/>
     </HBox>
 
     <!-- ========== ZONE DE CHAT ========== -->
     <ListView fx:id="chatListView" VBox.vgrow="ALWAYS" prefHeight="400"
-              style="-fx-background-color: white; -fx-background-radius: 16; -fx-border-color: #e2e8f0; -fx-border-radius: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"/>
+              style="-fx-background-color: #2b3038; -fx-background-radius: 14; -fx-border-color: #3d4450; -fx-border-radius: 14;"/>
 
     <!-- ========== ZONE DE SAISIE ========== -->
     <HBox spacing="10" VBox.vgrow="NEVER">
         <TextField fx:id="inputField" promptText="Posez votre question ici..." HBox.hgrow="ALWAYS"
-                   style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 12 18;"/>
+                   style="-fx-background-color: #3a404b; -fx-text-fill: #f3f4f6; -fx-border-color: #4b5563; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 12 18; -fx-prompt-text-fill: #9ca3af;"/>
         <Button text="📤 Envoyer" onAction="#sendMessage"
-                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 10 25; -fx-cursor: hand;"/>
+                style="-fx-background-color: #4b5563; -fx-text-fill: #f9fafb; -fx-font-weight: bold; -fx-background-radius: 20; -fx-padding: 10 25; -fx-cursor: hand;"/>
     </HBox>
 
     <!-- ========== SUGGESTIONS RAPIDES ========== -->
     <VBox spacing="8" VBox.vgrow="NEVER">
-        <Label text="💡 Suggestions rapides :" style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-weight: bold;"/>
+        <Label text="💡 Suggestions rapides :" style="-fx-font-size: 11px; -fx-text-fill: #b9c0cb; -fx-font-weight: bold;"/>
         <FlowPane hgap="8" vgap="8">
             <Button text="aide" onAction="#sendSuggestion"
-                    style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-border-color: #2563eb; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
+                    style="-fx-background-color: #374151; -fx-text-fill: #f3f4f6; -fx-border-color: #4b5563; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
             <Button text="statistiques" onAction="#sendSuggestion"
-                    style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-border-color: #2563eb; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
+                    style="-fx-background-color: #374151; -fx-text-fill: #f3f4f6; -fx-border-color: #4b5563; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
             <Button text="tickets urgents" onAction="#sendSuggestion"
-                    style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-border-color: #2563eb; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
+                    style="-fx-background-color: #374151; -fx-text-fill: #f3f4f6; -fx-border-color: #4b5563; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
             <Button text="créer un ticket" onAction="#sendSuggestion"
-                    style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-border-color: #2563eb; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
-            <Button text="commentaire" onAction="#sendSuggestion"
-                    style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-border-color: #2563eb; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
-            <Button text="liste" onAction="#sendSuggestion"
-                    style="-fx-background-color: white; -fx-text-fill: #2563eb; -fx-border-color: #2563eb; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
+                    style="-fx-background-color: #374151; -fx-text-fill: #f3f4f6; -fx-border-color: #4b5563; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 15; -fx-cursor: hand;"/>
         </FlowPane>
     </VBox>
 
