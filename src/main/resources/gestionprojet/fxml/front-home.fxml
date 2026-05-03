@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="740.0" prefWidth="1200.0" styleClass="app-root" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.esprit.gestionprojet.controller.FrontHomeController">
+    <padding>
+        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="header-bar">
+        <Label styleClass="section-title" text="Homepage" />
+        <HBox HBox.hgrow="ALWAYS" />
+        <Button fx:id="dashboardButton" onAction="#goDashboard" styleClass="btn,btn-outline" text="Dashboard" />
+        <Button onAction="#goHome" styleClass="btn,btn-outline" text="Homepage" />
+        <Button onAction="#goProjects" styleClass="btn,btn-primary" text="Projets" />
+        <Button onAction="#goTaches" styleClass="btn,btn-primary" text="Taches" />
+        <Button onAction="#logout" styleClass="btn,btn-danger" text="Logout" />
+    </HBox>
+
+    <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+        <StackPane styleClass="dashboard-card" HBox.hgrow="ALWAYS">
+            <VBox alignment="CENTER" spacing="12.0">
+                <Label styleClass="card-title" text="Homepage" />
+                <Label styleClass="section-subtitle" text="Use the top menu to open your projects and task lists." wrapText="true" />
+                <Button onAction="#goHome" styleClass="btn,btn-outline" text="Stay on Homepage" />
+            </VBox>
+        </StackPane>
+
+        <StackPane styleClass="dashboard-card" HBox.hgrow="ALWAYS">
+            <VBox alignment="CENTER" spacing="12.0">
+                <Label styleClass="card-title" text="Projects" />
+                <Label styleClass="section-subtitle" text="Choose a project, then open its tasks." wrapText="true" />
+                <Button onAction="#goProjects" styleClass="btn,btn-primary" text="Open Projets" />
+            </VBox>
+        </StackPane>
+    </HBox>
+</VBox>

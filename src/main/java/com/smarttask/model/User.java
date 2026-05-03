@@ -21,6 +21,13 @@ public class User {
     public User() {
     }
 
+    public User(String email, String password, String fullName, UserRole role) {
+        this.email = email;
+        this.password = password;
+        this.name = fullName;
+        this.roles = role != null ? role.toString() : null;
+    }
+
     public User(int iduser, String name, String email, String password, String type, String googleId, String roles,
                 boolean isEnabled, String linkedinId, String resetToken, LocalDateTime resetTokenExpiresAt,
                 String avatarName, LocalDateTime updatedAt, String faceEmbedding) {
@@ -49,6 +56,10 @@ public class User {
     }
 
     public String getName() {
+        return name;
+    }
+
+    public String getFullName() {
         return name;
     }
 
