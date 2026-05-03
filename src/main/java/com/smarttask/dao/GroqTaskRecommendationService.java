@@ -18,7 +18,7 @@ public class GroqTaskRecommendationService {
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(20))
             .build();
-    private static final String GROQ_API_KEY = getenv("GROQ_API_KEY", "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");
+    private static final String GROQ_API_KEY = getenv("GROQ_API_KEY", "");
     private static final String GROQ_MODEL = getenv("GROQ_MODEL", "llama-3.1-70b-versatile");
     private static final URI ENDPOINT = URI.create("https://api.groq.com/openai/v1/chat/completions");
     private static final Pattern CONTENT_PATTERN = Pattern.compile("\"content\"\\s*:\\s*\"((?:\\\\.|[^\\\"\\\\])*)\"", Pattern.DOTALL);
