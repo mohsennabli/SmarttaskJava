@@ -1,29 +1,32 @@
 package com.smarttask.controller;
 
+import com.smarttask.dao.ProjetDAO;
+import com.smarttask.dao.TacheDAO;
+import com.smarttask.model.Projet;
+import com.smarttask.model.Tache;
+import com.smarttask.util.AppSession;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import com.smarttask.AppContext;
-import com.smarttask.AppRouter;
-import com.smarttask.model.Projet;
-import com.smarttask.model.Tache;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.ResourceBundle;
 
-public class TacheListController {
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
-
-    private Integer projetFilter;
-
+public class TacheListController implements Initializable {
     @FXML
     private TextField searchField;
     @FXML
@@ -35,199 +38,241 @@ public class TacheListController {
     @FXML
     private Label pageTitle;
     @FXML
-    private Button dashboardButton;
-    @FXML
-    private VBox sidebarPanel;
-    @FXML
-    private HBox frontTopBar;
+    private Button addTacheBtn;
 
-    @FXML
-    private void initialize() {
-        boolean admin = "BACKOFFICE".equalsIgnoreCase(AppContext.sessionService().getOffice());
-        if (dashboardButton != null) {
-            dashboardButton.setVisible(admin);
-            dashboardButton.setManaged(admin);
-        }
-        if (sidebarPanel != null) {
-            sidebarPanel.setVisible(admin);
-            sidebarPanel.setManaged(admin);
-        }
-        if (frontTopBar != null) {
-            frontTopBar.setVisible(!admin);
-            frontTopBar.setManaged(!admin);
-        }
-        if (sortCombo != null) {
-            sortCombo.setItems(javafx.collections.FXCollections.observableArrayList(
-                    "Libelle A-Z",
-                    "Libelle Z-A",
-                    "Date limite proche",
-                    "Date limite lointaine",
-                    "Priorite haute",
-                    "Priorite basse"));
-            sortCombo.getSelectionModel().selectFirst();
-        }
+    private final TacheDAO tacheDAO = new TacheDAO();
+    private final ProjetDAO projetDAO = new ProjetDAO();
+    private Integer projetFilter = null;
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Show addTacheBtn only if manager
+        boolean isManager = "manager".equals(AppSession.getCurrentUser().getType());
+        addTacheBtn.setVisible(isManager);
+        addTacheBtn.setManaged(isManager);
+
+        // Populate sortCombo
+        sortCombo.getItems().addAll(
+                "Libelle A-Z",
+                "Libelle Z-A",
+                "Date limite proche",
+                "Date limite lointaine",
+                "Priorite haute",
+                "Priorite basse"
+        );
+        sortCombo.setValue("Libelle A-Z");
+
+        // Listen to search and sort changes
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> refreshGrid());
+        sortCombo.valueProperty().addListener((obs, oldVal, newVal) -> refreshGrid());
+
+        // Load initial data
         refreshGrid();
     }
 
     public void setProjetFilter(Integer projetId) {
         this.projetFilter = projetId;
-        if (pageTitle != null) {
-            pageTitle.setText(projetId == null ? "Gestion des taches" : "Gestion des taches");
+        if (projetId != null) {
+            var projet = projetDAO.getProjetById(projetId);
+            if (projet.isPresent()) {
+                pageTitle.setText("Tâches du projet: " + projet.get().getNom());
+            }
         }
         refreshGrid();
     }
 
     @FXML
+    private void handleAddTache() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/tache-form.fxml"));
+            Parent root = loader.load();
+            TacheFormController controller = loader.getController();
+            controller.setTacheToEdit(null);
+            if (projetFilter != null) {
+                controller.setSelectedProjetId(projetFilter);
+            }
+
+            Stage modal = new Stage();
+            modal.initModality(Modality.APPLICATION_MODAL);
+            modal.setTitle("Créer une tâche");
+            modal.setScene(new Scene(root));
+            modal.showAndWait();
+
+            refreshGrid();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'ouverture du formulaire: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleBackToProjets() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/projet-list.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) gridContainer.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la navigation: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleLogout() {
+        try {
+            AppSession.clear();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/login.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) gridContainer.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la déconnexion: " + e.getMessage());
+        }
+    }
+
     private void refreshGrid() {
-        String search = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
-        List<Tache> filtered = AppContext.tacheRepository().findAll().stream()
-                .filter(t -> projetFilter == null || t.getProjetId() == projetFilter)
-                .filter(t -> search.isEmpty()
-                        || t.getLibelle().toLowerCase(Locale.ROOT).contains(search)
-                || findProjetName(t.getProjetId()).toLowerCase(Locale.ROOT).contains(search))
-            .sorted(taskComparator())
-                .collect(Collectors.toList());
-
         gridContainer.getChildren().clear();
-
-        if (filtered.isEmpty()) {
-            emptyLabel.setVisible(true);
-            emptyLabel.setManaged(true);
-            return;
+        
+        List<Tache> taches;
+        if (projetFilter != null) {
+            taches = tacheDAO.getTachesByProjetId(projetFilter);
+        } else {
+            taches = tacheDAO.getAllTaches();
         }
 
-        emptyLabel.setVisible(false);
-        emptyLabel.setManaged(false);
+        // Filter by search
+        String searchText = searchField.getText().toLowerCase();
+        List<Tache> filtered = taches.stream()
+                .filter(t -> {
+                    boolean matches = t.getLibelle().toLowerCase().contains(searchText);
+                    if (!matches && projetFilter == null) {
+                        var projet = projetDAO.getProjetById(t.getProjetId());
+                        if (projet.isPresent()) {
+                            matches = projet.get().getNom().toLowerCase().contains(searchText);
+                        }
+                    }
+                    return matches;
+                })
+                .toList();
 
-        int col = 0;
-        int row = 0;
-        for (Tache tache : filtered) {
-            VBox card = buildCard(tache);
-            gridContainer.add(card, col, row);
-            col++;
-            if (col == 2) {
-                col = 0;
-                row++;
+        // Sort
+        List<Tache> sorted = new ArrayList<>(filtered);
+        String sortBy = sortCombo.getValue();
+        switch (sortBy) {
+            case "Libelle Z-A" -> sorted.sort((a, b) -> b.getLibelle().compareTo(a.getLibelle()));
+            case "Date limite proche" -> sorted.sort((a, b) -> a.getDateLimite().compareTo(b.getDateLimite()));
+            case "Date limite lointaine" -> sorted.sort((a, b) -> b.getDateLimite().compareTo(a.getDateLimite()));
+            case "Priorite haute" -> sorted.sort((a, b) -> comparePriorite(b.getPriorite(), a.getPriorite()));
+            case "Priorite basse" -> sorted.sort((a, b) -> comparePriorite(a.getPriorite(), b.getPriorite()));
+            default -> sorted.sort(Comparator.comparing(Tache::getLibelle));
+        }
+
+        // Show empty label if no taches
+        if (sorted.isEmpty()) {
+            emptyLabel.setVisible(true);
+            emptyLabel.setManaged(true);
+        } else {
+            emptyLabel.setVisible(false);
+            emptyLabel.setManaged(false);
+
+            // Add tache cards to grid (2 columns)
+            boolean isManager = "manager".equals(AppSession.getCurrentUser().getType());
+            for (int i = 0; i < sorted.size(); i++) {
+                int col = i % 2;
+                int row = i / 2;
+                gridContainer.add(createTacheCard(sorted.get(i), isManager), col, row);
             }
         }
     }
 
-    @FXML
-    private void clearSearch() {
-        searchField.clear();
-        refreshGrid();
-    }
+    private VBox createTacheCard(Tache tache, boolean isManager) {
+        VBox card = new VBox();
+        card.setStyle("-fx-border-color: #ddd; -fx-border-radius: 8; -fx-padding: 12;");
+        card.setSpacing(8);
 
-    @FXML
-    private void sortChanged() {
-        refreshGrid();
-    }
+        Label titleLabel = new Label(tache.getLibelle());
+        titleLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+        titleLabel.getStyleClass().add("card-title");
 
-    @FXML
-    private void createTache() {
-        AppRouter.showTacheForm(null, projetFilter);
-    }
+        var projet = projetDAO.getProjetById(tache.getProjetId());
+        String projetName = projet.isPresent() ? projet.get().getNom() : "Projet inconnu";
+        Label projetLabel = new Label("Projet: " + projetName);
+        projetLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666;");
 
-    @FXML
-    private void goDashboard() {
-        AppRouter.showDashboard();
-    }
+        Label prioriteLabel = new Label("Priorité: " + tache.getPriorite());
+        prioriteLabel.setStyle("-fx-font-size: 11; -fx-padding: 4 8;");
+        prioriteLabel.getStyleClass().add("chip");
 
-    @FXML
-    private void goHome() {
-        AppRouter.showFrontHome();
-    }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        Label statusLabel = new Label("État: " + tache.getEtat() + "  |  Date limite: " +
+                tache.getDateLimite().format(formatter));
+        statusLabel.setStyle("-fx-font-size: 10; -fx-text-fill: #999;");
+        statusLabel.getStyleClass().add("meta-text");
 
-    @FXML
-    private void goProjects() {
-        AppRouter.showProjetList();
-    }
+        HBox buttonBox = new HBox();
+        buttonBox.setSpacing(8);
+        buttonBox.setStyle("-fx-padding: 8 0 0 0;");
 
-    @FXML
-    private void goTaches() {
-        AppRouter.showTacheList(projetFilter);
-    }
+        if (isManager) {
+            Button editBtn = new Button("Modifier");
+            editBtn.setStyle("-fx-padding: 6 12;");
+            editBtn.setOnAction(e -> editTache(tache));
 
-    @FXML
-    private void logout() {
-        AppContext.sessionService().logout();
-        AppRouter.showLanding();
-    }
+            Button deleteBtn = new Button("Supprimer");
+            deleteBtn.setStyle("-fx-padding: 6 12; -fx-text-fill: #d32f2f;");
+            deleteBtn.setOnAction(e -> deleteTache(tache.getId()));
 
-    private VBox buildCard(Tache tache) {
-        Label title = new Label(tache.getLibelle());
-        title.getStyleClass().add("card-title");
+            buttonBox.getChildren().addAll(editBtn, deleteBtn);
+        }
 
-        Label project = new Label("Projet: " + findProjetName(tache.getProjetId()));
-        project.getStyleClass().add("meta-text");
-
-        Label priority = new Label("Priorite: " + capitalize(tache.getPriorite()));
-        priority.getStyleClass().add("chip");
-
-        Label details = new Label("Etat: " + formatEtat(tache.getEtat()) + "   |   Date limite: "
-                + tache.getDateLimite().format(DATE_FORMATTER));
-        details.getStyleClass().add("meta-text");
-
-        Button editBtn = new Button("Modifier");
-        editBtn.getStyleClass().addAll("btn", "btn-outline");
-        editBtn.setOnAction(event -> AppRouter.showTacheForm(tache));
-
-        Button deleteBtn = new Button("Supprimer");
-        deleteBtn.getStyleClass().addAll("btn", "btn-danger");
-        deleteBtn.setOnAction(event -> {
-            AppContext.tacheRepository().deleteById(tache.getId());
-            refreshGrid();
-        });
-
-        HBox actions = new HBox(10, editBtn, deleteBtn);
-
-        VBox card = new VBox(12, title, project, priority, details, actions);
-        card.getStyleClass().add("entity-card");
+        card.getChildren().addAll(titleLabel, projetLabel, prioriteLabel, statusLabel, buttonBox);
         return card;
     }
 
-    private String findProjetName(int projetId) {
-        return AppContext.projetRepository().findById(projetId)
-            .map(Projet::getNom)
-            .orElse("Projet supprime");
-    }
+    private void editTache(Tache tache) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/tache-form.fxml"));
+            Parent root = loader.load();
+            TacheFormController controller = loader.getController();
+            controller.setTacheToEdit(tache);
 
-    private String formatEtat(String etat) {
-        return switch (etat) {
-            case "en_cours" -> "En cours";
-            case "termine" -> "Termine";
-            default -> "A faire";
-        };
-    }
+            Stage modal = new Stage();
+            modal.initModality(Modality.APPLICATION_MODAL);
+            modal.setTitle("Modifier la tâche");
+            modal.setScene(new Scene(root));
+            modal.showAndWait();
 
-    private String capitalize(String value) {
-        if (value == null || value.isBlank()) {
-            return "-";
+            refreshGrid();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'ouverture du formulaire: " + e.getMessage());
         }
-        return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
     }
 
-    private Comparator<Tache> taskComparator() {
-        String sort = sortCombo == null || sortCombo.getValue() == null ? "Libelle A-Z" : sortCombo.getValue();
-        return switch (sort) {
-            case "Libelle Z-A" -> Comparator.comparing(Tache::getLibelle, String.CASE_INSENSITIVE_ORDER.reversed());
-            case "Date limite proche" -> Comparator.comparing(Tache::getDateLimite);
-            case "Date limite lointaine" -> Comparator.comparing(Tache::getDateLimite).reversed();
-            case "Priorite haute" -> Comparator.comparingInt((Tache t) -> priorityRank(t.getPriorite())).reversed();
-            case "Priorite basse" -> Comparator.comparingInt((Tache t) -> priorityRank(t.getPriorite()));
-            default -> Comparator.comparing(Tache::getLibelle, String.CASE_INSENSITIVE_ORDER);
-        };
-    }
-
-    private int priorityRank(String priority) {
-        if (priority == null) {
-            return 0;
+    private void deleteTache(int tacheId) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmer la suppression");
+        alert.setContentText("Êtes-vous sûr de vouloir supprimer cette tâche ?");
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            tacheDAO.deleteTache(tacheId);
+            refreshGrid();
         }
-        return switch (priority) {
-            case "haute" -> 3;
-            case "moyenne" -> 2;
-            case "basse" -> 1;
+    }
+
+    private int comparePriorite(String p1, String p2) {
+        int order1 = getPrioriteOrder(p1);
+        int order2 = getPrioriteOrder(p2);
+        return Integer.compare(order1, order2);
+    }
+
+    private int getPrioriteOrder(String priorite) {
+        return switch (priorite) {
+            case "basse" -> 0;
+            case "moyenne" -> 1;
+            case "haute" -> 2;
             default -> 0;
         };
     }
 }
+
+

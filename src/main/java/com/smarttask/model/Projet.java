@@ -10,13 +10,19 @@ public class Projet {
     private LocalDate dateEcheance;
     private String statut;
 
-    public Projet(int id, String nom, String description, LocalDate dateDebut, LocalDate dateEcheance, String statut) {
+    public Projet(int id, String nom, String description,
+                  LocalDate dateDebut, LocalDate dateEcheance, String statut) {
         this.id = id;
         this.nom = nom;
         this.description = description;
         this.dateDebut = dateDebut;
         this.dateEcheance = dateEcheance;
         this.statut = statut;
+    }
+
+    public Projet(String nom, String description,
+                  LocalDate dateDebut, LocalDate dateEcheance, String statut) {
+        this(0, nom, description, dateDebut, dateEcheance, statut);
     }
 
     public int getId() {
@@ -66,4 +72,10 @@ public class Projet {
     public void setStatut(String statut) {
         this.statut = statut;
     }
+
+    @Override
+    public String toString() {
+        return nom;
+    }
 }
+

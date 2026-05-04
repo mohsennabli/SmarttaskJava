@@ -2,6 +2,7 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
+import com.smarttask.util.InputValidator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -46,13 +47,14 @@ public class RegisterController implements Initializable {
 
     @FXML
     private void handleRegister(ActionEvent event) {
-        String name = nameField.getText().trim();
-        String email = emailField.getText().trim();
-        String password = passwordField.getText().trim();
-        String type = typeChoice.getValue() == null ? "" : typeChoice.getValue().trim();
+        String name = InputValidator.sanitize(nameField.getText());
+        String email = InputValidator.sanitize(emailField.getText());
+        String password = InputValidator.sanitize(passwordField.getText());
+        String type = InputValidator.sanitize(typeChoice.getValue());
 
-        if (name.isEmpty() || email.isEmpty() || password.isEmpty() || type.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please fill in all fields.");
+        String validationMessage = InputValidator.validateUserCreationFields(name, email, password, type);
+        if (validationMessage != null) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", validationMessage);
             return;
         }
 
@@ -72,6 +74,11 @@ public class RegisterController implements Initializable {
 
         if (userDAO.register(user)) {
             showAlert(Alert.AlertType.INFORMATION, "Success", "Account created successfully!");
+            // Clear form
+            nameField.clear();
+            emailField.clear();
+            passwordField.clear();
+            typeChoice.setValue(null);
         } else {
             showAlert(Alert.AlertType.ERROR, "Error", "Registration failed. Please try again.");
         }
@@ -98,4 +105,6 @@ public class RegisterController implements Initializable {
         alert.showAndWait();
     }
 }
+
+
 

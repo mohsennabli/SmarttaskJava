@@ -1,32 +1,32 @@
 package com.smarttask.controller;
 
+import com.smarttask.dao.ProjetDAO;
+import com.smarttask.model.Projet;
+import com.smarttask.util.AppSession;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import com.smarttask.AppContext;
-import com.smarttask.AppRouter;
-import com.smarttask.model.Projet;
-import com.smarttask.dao.ProjetPdfExportService;
-import com.smarttask.util.AlertUtil;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-import java.nio.file.Path;
+import java.io.IOException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.ResourceBundle;
 
-public class ProjetListController {
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
-    private final ProjetPdfExportService pdfExportService = new ProjetPdfExportService();
-
+public class ProjetListController implements Initializable {
     @FXML
     private TextField searchField;
     @FXML
@@ -36,204 +36,204 @@ public class ProjetListController {
     @FXML
     private Label emptyLabel;
     @FXML
-    private Button dashboardButton;
-    @FXML
-    private VBox sidebarPanel;
-    @FXML
-    private HBox frontTopBar;
+    private Button addProjetBtn;
 
-    @FXML
-    private void initialize() {
-        boolean admin = "BACKOFFICE".equalsIgnoreCase(AppContext.sessionService().getOffice());
-        if (dashboardButton != null) {
-            dashboardButton.setVisible(admin);
-            dashboardButton.setManaged(admin);
-        }
-        if (sidebarPanel != null) {
-            sidebarPanel.setVisible(admin);
-            sidebarPanel.setManaged(admin);
-        }
-        if (frontTopBar != null) {
-            frontTopBar.setVisible(!admin);
-            frontTopBar.setManaged(!admin);
-        }
-        if (sortCombo != null) {
-            sortCombo.setItems(javafx.collections.FXCollections.observableArrayList(
-                    "Nom A-Z",
-                    "Nom Z-A",
-                    "Date debut récente",
-                    "Date debut ancienne",
-                    "Echeance proche",
-                    "Echeance lointaine"));
-            sortCombo.getSelectionModel().selectFirst();
-        }
+    private final ProjetDAO projetDAO = new ProjetDAO();
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Show addProjetBtn only if manager
+        boolean isManager = "manager".equals(AppSession.getCurrentUser().getType());
+        addProjetBtn.setVisible(isManager);
+        addProjetBtn.setManaged(isManager);
+
+        // Populate sortCombo
+        sortCombo.getItems().addAll(
+                "Nom A-Z",
+                "Nom Z-A",
+                "Date debut récente",
+                "Date debut ancienne",
+                "Echeance proche",
+                "Echeance lointaine"
+        );
+        sortCombo.setValue("Nom A-Z");
+
+        // Listen to search and sort changes
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> refreshGrid());
+        sortCombo.valueProperty().addListener((obs, oldVal, newVal) -> refreshGrid());
+
+        // Load initial data
         refreshGrid();
     }
 
     @FXML
+    private void handleAddProjet() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/projet-form.fxml"));
+            Parent root = loader.load();
+            ProjetFormController controller = loader.getController();
+            controller.setProjetToEdit(null);
+
+            Stage modal = new Stage();
+            modal.initModality(Modality.APPLICATION_MODAL);
+            modal.setTitle("Créer un projet");
+            modal.setScene(new Scene(root));
+            modal.showAndWait();
+
+            refreshGrid();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'ouverture du formulaire: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleLogout() {
+        try {
+            AppSession.clear();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/login.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) gridContainer.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la déconnexion: " + e.getMessage());
+        }
+    }
+
     private void refreshGrid() {
-        List<Projet> filtered = visibleProjects();
-
         gridContainer.getChildren().clear();
+        List<Projet> projects = projetDAO.getAllProjets();
 
-        if (filtered.isEmpty()) {
+        // Filter by search
+        String searchText = searchField.getText().toLowerCase();
+        List<Projet> filtered = projects.stream()
+                .filter(p -> p.getNom().toLowerCase().contains(searchText) ||
+                        p.getDescription().toLowerCase().contains(searchText))
+                .toList();
+
+        // Sort
+        List<Projet> sorted = new ArrayList<>(filtered);
+        String sortBy = sortCombo.getValue();
+        switch (sortBy) {
+            case "Nom Z-A" -> sorted.sort((a, b) -> b.getNom().compareTo(a.getNom()));
+            case "Date debut récente" -> sorted.sort((a, b) -> b.getDateDebut().compareTo(a.getDateDebut()));
+            case "Date debut ancienne" -> sorted.sort((a, b) -> a.getDateDebut().compareTo(b.getDateDebut()));
+            case "Echeance proche" -> sorted.sort((a, b) -> a.getDateEcheance().compareTo(b.getDateEcheance()));
+            case "Echeance lointaine" -> sorted.sort((a, b) -> b.getDateEcheance().compareTo(a.getDateEcheance()));
+            default -> sorted.sort(Comparator.comparing(Projet::getNom));
+        }
+
+        // Show empty label if no projects
+        if (sorted.isEmpty()) {
             emptyLabel.setVisible(true);
             emptyLabel.setManaged(true);
-            return;
-        }
+        } else {
+            emptyLabel.setVisible(false);
+            emptyLabel.setManaged(false);
 
-        emptyLabel.setVisible(false);
-        emptyLabel.setManaged(false);
-
-        int col = 0;
-        int row = 0;
-        for (Projet projet : filtered) {
-            VBox card = buildCard(projet);
-            gridContainer.add(card, col, row);
-            col++;
-            if (col == 2) {
-                col = 0;
-                row++;
+            // Add project cards to grid (2 columns)
+            boolean isManager = "manager".equals(AppSession.getCurrentUser().getType());
+            for (int i = 0; i < sorted.size(); i++) {
+                int col = i % 2;
+                int row = i / 2;
+                gridContainer.add(createProjectCard(sorted.get(i), isManager), col, row);
             }
         }
     }
 
-    @FXML
-    private void clearSearch() {
-        searchField.clear();
-        refreshGrid();
-    }
+    private VBox createProjectCard(Projet projet, boolean isManager) {
+        VBox card = new VBox();
+        card.setStyle("-fx-border-color: #ddd; -fx-border-radius: 8; -fx-padding: 12;");
+        card.setSpacing(8);
 
-    @FXML
-    private void sortChanged() {
-        refreshGrid();
-    }
+        Label titleLabel = new Label(projet.getNom());
+        titleLabel.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+        titleLabel.getStyleClass().add("card-title");
 
-    @FXML
-    private void exportPdf() {
-        List<Projet> projets = visibleProjects();
-        if (projets.isEmpty()) {
-            AlertUtil.info("Export PDF", "Aucun projet ne correspond aux filtres actuels.");
-            return;
+        Label descLabel = new Label(projet.getDescription());
+        descLabel.setStyle("-fx-font-size: 12; -fx-text-fill: #666; -fx-wrap-text: true;");
+        descLabel.getStyleClass().add("card-text");
+        descLabel.setWrapText(true);
+
+        Label statutLabel = new Label("Statut: " + projet.getStatut());
+        statutLabel.setStyle("-fx-font-size: 11; -fx-padding: 4 8;");
+        statutLabel.getStyleClass().add("chip");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        Label datesLabel = new Label("Début: " + projet.getDateDebut().format(formatter) +
+                "  |  Échéance: " + projet.getDateEcheance().format(formatter));
+        datesLabel.setStyle("-fx-font-size: 10; -fx-text-fill: #999;");
+        datesLabel.getStyleClass().add("meta-text");
+
+        HBox buttonBox = new HBox();
+        buttonBox.setSpacing(8);
+        buttonBox.setStyle("-fx-padding: 8 0 0 0;");
+
+        Button voirBtn = new Button("Voir tâches");
+        voirBtn.setStyle("-fx-padding: 6 12;");
+        voirBtn.setOnAction(e -> vTachesForProject(projet.getId()));
+
+        buttonBox.getChildren().add(voirBtn);
+
+        if (isManager) {
+            Button editBtn = new Button("Modifier");
+            editBtn.setStyle("-fx-padding: 6 12;");
+            editBtn.setOnAction(e -> editProjet(projet));
+
+            Button deleteBtn = new Button("Supprimer");
+            deleteBtn.setStyle("-fx-padding: 6 12; -fx-text-fill: #d32f2f;");
+            deleteBtn.setOnAction(e -> deleteProjet(projet.getId()));
+
+            buttonBox.getChildren().addAll(editBtn, deleteBtn);
         }
 
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Exporter les projets en PDF");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Fichier PDF", "*.pdf"));
-        fileChooser.setInitialFileName("projets-" + LocalDate.now() + ".pdf");
-
-        java.io.File selectedFile = fileChooser.showSaveDialog(searchField.getScene().getWindow());
-        if (selectedFile == null) {
-            return;
-        }
-
-        try {
-            Path output = selectedFile.toPath();
-            if (!output.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".pdf")) {
-                output = output.resolveSibling(output.getFileName() + ".pdf");
-            }
-
-            pdfExportService.exportProjects(projets, output);
-            AlertUtil.info("Export PDF", "Le fichier a ete genere avec succes.\n" + output);
-        } catch (Exception e) {
-            AlertUtil.error("Export PDF", "Impossible de generer le PDF: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void createProjet() {
-        AppRouter.showProjetForm(null);
-    }
-
-    @FXML
-    private void goDashboard() {
-        AppRouter.showDashboard();
-    }
-
-    @FXML
-    private void goFrontHome() {
-        AppRouter.showFrontHome();
-    }
-
-    @FXML
-    private void goTaches() {
-        AppRouter.showTacheList();
-    }
-
-    @FXML
-    private void logout() {
-        AppContext.sessionService().logout();
-        AppRouter.showLanding();
-    }
-
-    private List<Projet> visibleProjects() {
-        String search = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
-        return AppContext.projetRepository().findAll().stream()
-                .filter(p -> search.isEmpty()
-                        || p.getNom().toLowerCase(Locale.ROOT).contains(search)
-                        || p.getDescription().toLowerCase(Locale.ROOT).contains(search))
-                .sorted(projectComparator())
-                .collect(Collectors.toList());
-    }
-
-    private VBox buildCard(Projet projet) {
-        Label title = new Label(projet.getNom());
-        title.getStyleClass().add("card-title");
-
-        Label description = new Label(projet.getDescription());
-        description.getStyleClass().add("card-text");
-        description.setWrapText(true);
-
-        Label status = new Label("Statut: " + formatStatut(projet.getStatut()));
-        status.getStyleClass().add("chip");
-
-        Label dates = new Label("Debut: " + projet.getDateDebut().format(DATE_FORMATTER) + "   |   Echeance: "
-                + projet.getDateEcheance().format(DATE_FORMATTER));
-        dates.getStyleClass().add("meta-text");
-
-        Button editBtn = new Button("Modifier");
-        editBtn.getStyleClass().addAll("btn", "btn-outline");
-        editBtn.setOnAction(event -> AppRouter.showProjetForm(projet));
-
-        Button tasksBtn = new Button("Voir taches");
-        tasksBtn.getStyleClass().addAll("btn", "btn-primary");
-        tasksBtn.setOnAction(event -> AppRouter.showTacheList(projet.getId()));
-
-        Button deleteBtn = new Button("Supprimer");
-        deleteBtn.getStyleClass().addAll("btn", "btn-danger");
-        deleteBtn.setOnAction(event -> {
-            try {
-                AppContext.projectNotificationService().notifyDeleted(projet);
-            } catch (Exception ignored) {
-            }
-            AppContext.projetRepository().deleteById(projet.getId());
-            refreshGrid();
-        });
-
-        HBox actions = new HBox(10, tasksBtn, editBtn, deleteBtn);
-
-        VBox card = new VBox(12, title, description, status, dates, actions);
-        card.getStyleClass().add("entity-card");
+        card.getChildren().addAll(titleLabel, descLabel, statutLabel, datesLabel, buttonBox);
         return card;
     }
 
-    private String formatStatut(String statut) {
-        return switch (statut) {
-            case "actif" -> "Actif";
-            case "termine" -> "Termine";
-            default -> "En attente";
-        };
+    private void vTachesForProject(int projetId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/tache-list.fxml"));
+            Parent root = loader.load();
+            TacheListController controller = loader.getController();
+            controller.setProjetFilter(projetId);
+
+            Stage stage = (Stage) gridContainer.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de la navigation: " + e.getMessage());
+        }
     }
 
-    private Comparator<Projet> projectComparator() {
-        String sort = sortCombo == null || sortCombo.getValue() == null ? "Nom A-Z" : sortCombo.getValue();
-        return switch (sort) {
-            case "Nom Z-A" -> Comparator.comparing(Projet::getNom, String.CASE_INSENSITIVE_ORDER.reversed());
-            case "Date debut récente" -> Comparator.comparing(Projet::getDateDebut).reversed();
-            case "Date debut ancienne" -> Comparator.comparing(Projet::getDateDebut);
-            case "Echeance proche" -> Comparator.comparing(Projet::getDateEcheance);
-            case "Echeance lointaine" -> Comparator.comparing(Projet::getDateEcheance).reversed();
-            default -> Comparator.comparing(Projet::getNom, String.CASE_INSENSITIVE_ORDER);
-        };
+    private void editProjet(Projet projet) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/projet-form.fxml"));
+            Parent root = loader.load();
+            ProjetFormController controller = loader.getController();
+            controller.setProjetToEdit(projet);
+
+            Stage modal = new Stage();
+            modal.initModality(Modality.APPLICATION_MODAL);
+            modal.setTitle("Modifier le projet");
+            modal.setScene(new Scene(root));
+            modal.showAndWait();
+
+            refreshGrid();
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'ouverture du formulaire: " + e.getMessage());
+        }
+    }
+
+    private void deleteProjet(int projetId) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmer la suppression");
+        alert.setContentText("Êtes-vous sûr de vouloir supprimer ce projet ?");
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            projetDAO.deleteProjet(projetId);
+            refreshGrid();
+        }
     }
 }
+
+

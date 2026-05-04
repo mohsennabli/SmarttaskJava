@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.smarttask.controller.ProjetListController">
+
+    <!-- Top Bar -->
+    <top>
+        <HBox spacing="12" style="-fx-padding: 16; -fx-background-color: #f5f5f5; -fx-border-color: #ddd; -fx-border-width: 0 0 1 0;">
+            <TextField fx:id="searchField" promptText="Rechercher..." prefWidth="200"/>
+            <ComboBox fx:id="sortCombo" prefWidth="150"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="addProjetBtn" text="Ajouter un projet" onAction="#handleAddProjet"
+                    style="-fx-padding: 8 16; -fx-font-size: 12;"/>
+            <Button text="Déconnexion" onAction="#handleLogout"
+                    style="-fx-padding: 8 16; -fx-font-size: 12;"/>
+        </HBox>
+    </top>
+
+    <!-- Center Content -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-padding: 0;">
+            <VBox spacing="16" style="-fx-padding: 16;">
+                <Label fx:id="emptyLabel" text="Aucun projet trouvé." visible="false" managed="false"
+                       style="-fx-font-size: 14; -fx-text-fill: #999;"/>
+                <GridPane fx:id="gridContainer" hgap="16" vgap="16"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
+

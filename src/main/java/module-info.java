@@ -1,22 +1,28 @@
-module org.esprit.gestionprojet {
+module com.smarttask {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.web;
     requires java.sql;
     requires java.net.http;
     requires java.desktop;
+    requires jdk.httpserver;
+    requires jdk.jsobject;
     requires jbcrypt;
     requires jakarta.mail;
+    requires jakarta.activation;
+    requires kernel;
+    requires io;
+    requires layout;
+    requires com.google.gson;
     requires org.apache.pdfbox;
 
-    requires org.controlsfx.controls;
-    requires com.dlsc.formsfx;
-    requires net.synedra.validatorfx;
-    requires org.kordamp.bootstrapfx.core;
+    opens com.smarttask to javafx.graphics, javafx.fxml;
+    opens com.smarttask.controller to javafx.fxml;
+    opens com.smarttask.service to com.google.gson;
 
-    opens org.esprit.gestionprojet to javafx.fxml;
-    opens org.esprit.gestionprojet.controller to javafx.fxml;
-
-    exports org.esprit.gestionprojet;
-    exports org.esprit.gestionprojet.service;
-    exports org.esprit.gestionprojet.model;
+    exports com.smarttask;
+    exports com.smarttask.model;
+    exports com.smarttask.dao;
+    exports com.smarttask.util;
+    exports com.smarttask.service;
 }

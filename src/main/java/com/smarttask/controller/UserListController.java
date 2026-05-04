@@ -34,9 +34,6 @@ public class UserListController implements Initializable {
     private TableView<User> usersTable;
 
     @FXML
-    private TableColumn<User, Integer> colId;
-
-    @FXML
     private TableColumn<User, String> colName;
 
     @FXML
@@ -67,6 +64,12 @@ public class UserListController implements Initializable {
     private Button logoutButton;
 
     @FXML
+    private Button profileButton;
+
+    @FXML
+    private Button projetsButton;
+
+    @FXML
     private TextField searchField;
 
     @FXML
@@ -80,7 +83,6 @@ public class UserListController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        colId.setCellValueFactory(new PropertyValueFactory<>("iduser"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
@@ -114,7 +116,19 @@ public class UserListController implements Initializable {
 
     @FXML
     private void handleAdd(ActionEvent event) {
-        System.out.println("Open Add User form");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/add-user.fxml"));
+            Stage addStage = new Stage();
+            addStage.setTitle("Add User");
+            addStage.initModality(Modality.APPLICATION_MODAL);
+            addStage.setScene(new Scene(loader.load()));
+            addStage.setMaximized(true);
+
+            addStage.showAndWait();
+            loadUsers();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open add user screen.");
+        }
     }
 
     @FXML
@@ -229,6 +243,7 @@ public class UserListController implements Initializable {
         }
     }
 
+
     @FXML
     private void handleLogout(ActionEvent event) {
         AppSession.clear();
@@ -244,6 +259,36 @@ public class UserListController implements Initializable {
             stage.show();
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to return to login screen.");
+        }
+    }
+
+    @FXML
+    private void handleProfile(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/profile.fxml"));
+            Stage profileStage = new Stage();
+            profileStage.setTitle("Mon Profil");
+            profileStage.initModality(Modality.APPLICATION_MODAL);
+            profileStage.initOwner(profileButton.getScene().getWindow());
+            profileStage.setScene(new Scene(loader.load()));
+            profileStage.setResizable(false);
+
+            profileStage.showAndWait();
+            loadUsers();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open profile screen.");
+        }
+    }
+
+    @FXML
+    private void handleGoToProjets(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/projet-list.fxml"));
+            Stage stage = (Stage) usersTable.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open project management screen.");
         }
     }
 

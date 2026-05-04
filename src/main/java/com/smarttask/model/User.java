@@ -9,6 +9,7 @@ public class User {
     private String password;
     private String type;
     private String googleId;
+    private String githubId;
     private String roles;
     private boolean isEnabled;
     private String linkedinId;
@@ -97,6 +98,14 @@ public class User {
 
     public void setGoogleId(String googleId) {
         this.googleId = googleId;
+    }
+
+    public String getGithubId() {
+        return githubId;
+    }
+
+    public void setGithubId(String githubId) {
+        this.githubId = githubId;
     }
 
     public String getRoles() {

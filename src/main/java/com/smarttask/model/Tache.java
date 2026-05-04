@@ -10,13 +10,19 @@ public class Tache {
     private String etat;
     private int projetId;
 
-    public Tache(int id, String libelle, String priorite, LocalDate dateLimite, String etat, int projetId) {
+    public Tache(int id, String libelle, String priorite,
+                 LocalDate dateLimite, String etat, int projetId) {
         this.id = id;
         this.libelle = libelle;
         this.priorite = priorite;
         this.dateLimite = dateLimite;
         this.etat = etat;
         this.projetId = projetId;
+    }
+
+    public Tache(String libelle, String priorite,
+                 LocalDate dateLimite, String etat, int projetId) {
+        this(0, libelle, priorite, dateLimite, etat, projetId);
     }
 
     public int getId() {
@@ -67,3 +73,4 @@ public class Tache {
         this.projetId = projetId;
     }
 }
+

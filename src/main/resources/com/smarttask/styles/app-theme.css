@@ -161,3 +161,11 @@
     -fx-text-fill: #e5e7eb;
 }
 
+.avatar-preview {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 10, 0.2, 0, 2);
+    -fx-border-color: #6b7280;
+    -fx-border-width: 2;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+}
+

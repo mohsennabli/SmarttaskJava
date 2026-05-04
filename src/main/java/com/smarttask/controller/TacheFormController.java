@@ -1,19 +1,19 @@
 package com.smarttask.controller;
 
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import com.smarttask.AppContext;
-import com.smarttask.AppRouter;
+import com.smarttask.dao.ProjetDAO;
+import com.smarttask.dao.TacheDAO;
 import com.smarttask.model.Projet;
 import com.smarttask.model.Tache;
-import com.smarttask.util.AlertUtil;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
 
+import java.net.URL;
 import java.time.LocalDate;
+import java.util.ResourceBundle;
 
-public class TacheFormController {
+public class TacheFormController implements Initializable {
     @FXML
     private Label pageTitle;
     @FXML
@@ -26,12 +26,7 @@ public class TacheFormController {
     private ComboBox<String> etatCombo;
     @FXML
     private ComboBox<Projet> projetCombo;
-    @FXML
-    private Button dashboardButton;
-    @FXML
-    private VBox sidebarPanel;
-    @FXML
-    private HBox frontTopBar;
+
     @FXML
     private Label libelleError;
     @FXML
@@ -43,200 +38,137 @@ public class TacheFormController {
     @FXML
     private Label projetError;
 
+    @FXML
+    private Button saveBtn;
+    @FXML
+    private Button cancelBtn;
+
+    private final TacheDAO tacheDAO = new TacheDAO();
+    private final ProjetDAO projetDAO = new ProjetDAO();
     private Tache tacheToEdit;
     private Integer selectedProjetId;
 
-    @FXML
-    private void initialize() {
-        prioriteCombo.setItems(FXCollections.observableArrayList("basse", "moyenne", "haute"));
-        etatCombo.setItems(FXCollections.observableArrayList("a_faire", "en_cours", "termine"));
-        projetCombo.setItems(FXCollections.observableArrayList(AppContext.projetRepository().findAll()));
-        updateDashboardButtonVisibility();
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        prioriteCombo.getItems().addAll("basse", "moyenne", "haute");
+        etatCombo.getItems().addAll("a_faire", "en_cours", "termine");
 
-        boolean admin = "BACKOFFICE".equalsIgnoreCase(AppContext.sessionService().getOffice());
-        if (sidebarPanel != null) {
-            sidebarPanel.setVisible(admin);
-            sidebarPanel.setManaged(admin);
-        }
-        if (frontTopBar != null) {
-            frontTopBar.setVisible(!admin);
-            frontTopBar.setManaged(!admin);
-        }
-
-        prioriteCombo.getSelectionModel().select("moyenne");
-        etatCombo.getSelectionModel().select("a_faire");
-
-        projetCombo.setCellFactory(list -> new javafx.scene.control.ListCell<>() {
-            @Override
-            protected void updateItem(Projet item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getNom());
-            }
-        });
-        projetCombo.setButtonCell(new javafx.scene.control.ListCell<>() {
-            @Override
-            protected void updateItem(Projet item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getNom());
-            }
-        });
+        // Load projects for ComboBox
+        projetCombo.getItems().addAll(projetDAO.getAllProjets());
+        projetCombo.setVisibleRowCount(5);
     }
 
     public void setTacheToEdit(Tache tache) {
         this.tacheToEdit = tache;
+
         if (tache == null) {
-            pageTitle.setText("Creer une tache");
-            applySelectedProject();
-            return;
+            pageTitle.setText("Créer une tâche");
+        } else {
+            pageTitle.setText("Modifier la tâche");
+            libelleField.setText(tache.getLibelle());
+            prioriteCombo.setValue(tache.getPriorite());
+            dateLimitePicker.setValue(tache.getDateLimite());
+            etatCombo.setValue(tache.getEtat());
+            
+            var projet = projetDAO.getProjetById(tache.getProjetId());
+            if (projet.isPresent()) {
+                projetCombo.setValue(projet.get());
+            }
         }
-
-        pageTitle.setText("Modifier la tache");
-        libelleField.setText(tache.getLibelle());
-        prioriteCombo.getSelectionModel().select(tache.getPriorite());
-        dateLimitePicker.setValue(tache.getDateLimite());
-        etatCombo.getSelectionModel().select(tache.getEtat());
-
-        projetCombo.getSelectionModel().select(
-            AppContext.projetRepository().findAll().stream()
-                        .filter(p -> p.getId() == tache.getProjetId())
-                        .findFirst()
-                        .orElse(null));
     }
 
-    public void setSelectedProjetId(Integer selectedProjetId) {
-        this.selectedProjetId = selectedProjetId;
-        applySelectedProject();
+    public void setSelectedProjetId(Integer projetId) {
+        this.selectedProjetId = projetId;
+        if (projetId != null) {
+            var projet = projetDAO.getProjetById(projetId);
+            if (projet.isPresent()) {
+                projetCombo.setValue(projet.get());
+            }
+        }
     }
 
     @FXML
     private void saveTache() {
-        clearErrors();
-
-        String libelle = safeValue(libelleField.getText());
-        String priorite = prioriteCombo.getValue();
-        LocalDate dateLimite = dateLimitePicker.getValue();
-        String etat = etatCombo.getValue();
-        Projet projet = projetCombo.getValue();
-
-        boolean valid = true;
-
-        if (libelle.isEmpty()) {
-            libelleError.setText("Le libelle est obligatoire.");
-            valid = false;
-        }
-        if (priorite == null || priorite.isEmpty()) {
-            prioriteError.setText("La priorite est obligatoire.");
-            valid = false;
-        }
-        if (dateLimite == null) {
-            dateLimiteError.setText("La date limite est obligatoire.");
-            valid = false;
-        } else if (!dateLimite.isAfter(LocalDate.now())) {
-            dateLimiteError.setText("La date limite doit etre superieure a aujourd'hui.");
-            valid = false;
-        }
-        if (etat == null || etat.isEmpty()) {
-            etatError.setText("L'etat est obligatoire.");
-            valid = false;
-        }
-        if (projet == null) {
-            projetError.setText("Le projet est obligatoire.");
-            valid = false;
-        }
-
-        if (!valid) {
-            return;
-        }
-
-        if (tacheToEdit == null) {
-            Tache created = new Tache(0, libelle, priorite, dateLimite, etat, projet.getId());
-            int createdId = AppContext.tacheRepository().insert(created);
-            created.setId(createdId);
-            AlertUtil.info("Tache", "Tache creee avec succes.");
-        } else {
-            tacheToEdit.setLibelle(libelle);
-            tacheToEdit.setPriorite(priorite);
-            tacheToEdit.setDateLimite(dateLimite);
-            tacheToEdit.setEtat(etat);
-            tacheToEdit.setProjetId(projet.getId());
-            AppContext.tacheRepository().update(tacheToEdit);
-            AlertUtil.info("Tache", "Tache modifiee avec succes.");
-        }
-
-        AppRouter.showTacheList(projet.getId());
-    }
-
-    @FXML
-    private void cancel() {
-        if (selectedProjetId != null) {
-            AppRouter.showTacheList(selectedProjetId);
-        } else if (projetCombo.getValue() != null) {
-            AppRouter.showTacheList(projetCombo.getValue().getId());
-        } else {
-            AppRouter.showTacheList();
-        }
-    }
-
-    @FXML
-    private void goDashboard() {
-        AppRouter.showDashboard();
-    }
-
-    @FXML
-    private void goHome() {
-        AppRouter.showFrontHome();
-    }
-
-    @FXML
-    private void goProjects() {
-        AppRouter.showProjetList();
-    }
-
-    @FXML
-    private void goTaches() {
-        AppRouter.showTacheList(selectedProjetId);
-    }
-
-    @FXML
-    private void logout() {
-        AppContext.sessionService().logout();
-        AppRouter.showLanding();
-    }
-
-    private String safeValue(String value) {
-        return value == null ? "" : value.trim();
-    }
-
-    private void applySelectedProject() {
-        if (projetCombo == null || selectedProjetId == null) {
-            return;
-        }
-
-        Projet selected = AppContext.projetRepository().findAll().stream()
-                .filter(p -> p.getId() == selectedProjetId)
-                .findFirst()
-                .orElse(null);
-
-        if (selected != null) {
-            projetCombo.getSelectionModel().select(selected);
-        }
-    }
-
-    private void clearErrors() {
+        // Clear errors
         libelleError.setText("");
         prioriteError.setText("");
         dateLimiteError.setText("");
         etatError.setText("");
         projetError.setText("");
-    }
 
-    private void updateDashboardButtonVisibility() {
-        if (dashboardButton == null) {
+        // Validate
+        String libelle = libelleField.getText().trim();
+        String priorite = prioriteCombo.getValue();
+        LocalDate dateLimite = dateLimitePicker.getValue();
+        String etat = etatCombo.getValue();
+        Projet projet = projetCombo.getValue();
+
+        boolean isValid = true;
+
+        if (libelle.isEmpty()) {
+            libelleError.setText("Le libellé est obligatoire");
+            isValid = false;
+        }
+
+        if (priorite == null) {
+            prioriteError.setText("La priorité est obligatoire");
+            isValid = false;
+        }
+
+        if (dateLimite == null || dateLimite.isBefore(LocalDate.now())) {
+            dateLimiteError.setText("La date limite doit être après aujourd'hui");
+            isValid = false;
+        }
+
+        if (etat == null) {
+            etatError.setText("L'état est obligatoire");
+            isValid = false;
+        }
+
+        if (projet == null) {
+            projetError.setText("Le projet est obligatoire");
+            isValid = false;
+        }
+
+        if (!isValid) {
             return;
         }
 
-        boolean admin = "BACKOFFICE".equalsIgnoreCase(AppContext.sessionService().getOffice());
-        dashboardButton.setVisible(admin);
-        dashboardButton.setManaged(admin);
+        Tache tache = new Tache(libelle, priorite, dateLimite, etat, projet.getId());
+
+        boolean success;
+        if (tacheToEdit == null) {
+            // Create new
+            int id = tacheDAO.insertTache(tache);
+            success = id > 0;
+        } else {
+            // Edit existing
+            tache.setId(tacheToEdit.getId());
+            success = tacheDAO.updateTache(tache);
+        }
+
+        if (success) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Succès");
+            alert.setContentText("La tâche a été enregistrée avec succès");
+            alert.showAndWait();
+            closeWindow();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Erreur");
+            alert.setContentText("Erreur lors de l'enregistrement de la tâche");
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
+    private void cancel() {
+        closeWindow();
+    }
+
+    private void closeWindow() {
+        Stage stage = (Stage) libelleField.getScene().getWindow();
+        stage.close();
     }
 }
+
