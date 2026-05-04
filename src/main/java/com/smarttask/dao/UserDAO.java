@@ -164,6 +164,25 @@ public class UserDAO {
         }
     }
 
+    public boolean saveFaceEmbedding(int iduser, String embeddingJson) {
+        String sql = "UPDATE user SET face_embedding = ? WHERE iduser = ?";
+        Connection connection = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, embeddingJson);
+                statement.setInt(2, iduser);
+                return statement.executeUpdate() > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to save face embedding: " + e.getMessage());
+            return false;
+        } finally {
+            DatabaseConnection.closeConnection(connection);
+        }
+    }
+
     public boolean storeResetToken(int userId, String resetToken, java.time.LocalDateTime expiresAt) {
         String sql = "UPDATE user SET reset_token=?, reset_token_expires_at=? WHERE iduser=?";
         Connection connection = null;
@@ -422,29 +441,52 @@ public class UserDAO {
         return null;
     }
 
-    public List<User> findUsersWithFaceEmbeddings() {
-        String sql = "SELECT * FROM user WHERE is_enabled = 1 AND face_embedding IS NOT NULL AND JSON_LENGTH(face_embedding) > 0 ORDER BY iduser ASC";
-        Connection connection = null;
-        List<User> users = new ArrayList<>();
+     public List<User> findUsersWithFaceEmbeddings() {
+         String sql = "SELECT * FROM user WHERE is_enabled = 1 AND face_embedding IS NOT NULL AND JSON_LENGTH(face_embedding) > 0 ORDER BY iduser ASC";
+         Connection connection = null;
+         List<User> users = new ArrayList<>();
 
-        try {
-            connection = DatabaseConnection.getConnection();
-            try (PreparedStatement statement = connection.prepareStatement(sql);
-                 ResultSet resultSet = statement.executeQuery()) {
+         try {
+             connection = DatabaseConnection.getConnection();
+             try (PreparedStatement statement = connection.prepareStatement(sql);
+                  ResultSet resultSet = statement.executeQuery()) {
 
-                while (resultSet.next()) {
-                    users.add(mapUser(resultSet));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Failed to fetch users with face embeddings: " + e.getMessage());
-            return new ArrayList<>();
-        } finally {
-            DatabaseConnection.closeConnection(connection);
-        }
+                 while (resultSet.next()) {
+                     users.add(mapUser(resultSet));
+                 }
+             }
+         } catch (SQLException e) {
+             System.err.println("Failed to fetch users with face embeddings: " + e.getMessage());
+             return new ArrayList<>();
+         } finally {
+             DatabaseConnection.closeConnection(connection);
+         }
 
-        return users;
-    }
+         return users;
+     }
+
+     public String getFaceEmbeddingByEmail(String email) {
+         String sql = "SELECT face_embedding FROM user WHERE email = ? AND is_enabled = 1";
+         Connection connection = null;
+
+         try {
+             connection = DatabaseConnection.getConnection();
+             try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                 statement.setString(1, email);
+                 try (ResultSet resultSet = statement.executeQuery()) {
+                     if (resultSet.next()) {
+                         return resultSet.getString("face_embedding");
+                     }
+                 }
+             }
+         } catch (SQLException e) {
+             System.err.println("Failed to fetch face embedding by email: " + e.getMessage());
+         } finally {
+             DatabaseConnection.closeConnection(connection);
+         }
+
+         return null;
+     }
 
     public User upsertGoogleUser(String googleId, String email, String name) {
         User byGoogleId = findByGoogleId(googleId);

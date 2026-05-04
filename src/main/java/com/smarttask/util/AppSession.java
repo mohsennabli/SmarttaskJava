@@ -17,6 +17,10 @@ public final class AppSession {
         currentUser = user;
     }
 
+    public static void startSession(User user) {
+        currentUser = user;
+    }
+
     public static void clear() {
         currentUser = null;
     }
