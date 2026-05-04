@@ -10,27 +10,19 @@ Auteur: Tahwissa Team
 Date: 2026
 """
 
-import os
-# Suppress GUI and noisy logs BEFORE importing OpenCV / Qt
+import cv2
 import sys
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-os.environ.setdefault("OPENCV_LOG_LEVEL", "SILENT")
-os.environ.setdefault("QT_LOGGING_RULES", "*.debug=false;qt.qpa.*=false")
-
 import io
 import json
 import time
-import cv2
+import os
 from datetime import datetime
 
-# Force stdout to UTF-8 FIRST to ensure clean JSON output
+# ── Force stdout to UTF-8 on Windows (prevents cp1252 encoding issues) ──────
+# Without this, Python on Windows encodes stdout in the system code page
+# (e.g. cp1252), causing PHP's json_decode to see malformed UTF-8 bytes.
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-
-# Redirect stderr to /dev/null AFTER setting stdout to suppress warnings from native libraries
-try:
-    sys.stderr = open(os.devnull, 'w')
-except Exception:
-    pass
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
 class HumanVerification:
@@ -65,9 +57,9 @@ class HumanVerification:
         # Détecter les visages
         faces = self.face_cascade.detectMultiScale(
             gray,
-            scaleFactor=1.3,
-            minNeighbors=8,
-            minSize=(80, 80),
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(50, 50),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
         
@@ -141,7 +133,11 @@ class HumanVerification:
         total_frames = 0
         frames_with_one_face = 0
         
-        # Headless capture loop: collect frames silently for the given duration
+        # Fenêtre de visualisation
+        window_name = 'Tahwissa - Verification Biometrique (Appuyez sur ESPACE pour capturer, ESC pour annuler)'
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_name, 800, 600)
+
         try:
             while (time.time() - start_time) < duration:
                 ret, frame = camera.read()
@@ -154,18 +150,67 @@ class HumanVerification:
                 # Détecter les visages
                 face_count, faces = self.detect_faces(frame)
 
-                if face_count == 1:
+                # Dessiner les rectangles
+                display_frame = self.draw_face_rectangles(frame.copy(), faces)
+
+                # Ajouter des informations à l'écran
+                elapsed = int(time.time() - start_time)
+                remaining = duration - elapsed
+
+                # Texte de statut
+                status_text = f"Temps restant: {remaining}s"
+                cv2.putText(display_frame, status_text, (10, 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+                if face_count == 0:
+                    status = "Aucun visage detecte"
+                    color = (0, 0, 255)  # Rouge
+                elif face_count == 1:
+                    status = "Visage detecte - Appuyez sur ESPACE"
+                    color = (0, 255, 0)  # Vert
                     frames_with_one_face += 1
 
-                    # Garder la meilleure image (largest face area)
-                    (x, y, w, h) = faces[0]
-                    area = w * h
-                    if area > best_area:
-                        best_area = area
+                    # Garder la meilleure image
+                    if best_frame is None:
                         best_frame = frame.copy()
+                else:
+                    status = f"{face_count} visages detectes - Une seule personne requise"
+                    color = (0, 165, 255)  # Orange
+
+                cv2.putText(display_frame, status, (10, 60),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
+                # Instructions
+                cv2.putText(display_frame, "ESPACE: Capturer | ESC: Annuler", (10, display_frame.shape[0] - 20),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+                # Afficher le frame
+                cv2.imshow(window_name, display_frame)
 
                 max_faces_detected = max(max_faces_detected, face_count)
 
+                # Gestion des touches
+                key = cv2.waitKey(1) & 0xFF
+
+                if key == 27:  # ESC
+                    result['message'] = "ERROR: Vérification annulée par l'utilisateur"
+                    break
+
+                elif key == 32:  # SPACE
+                    if face_count == 1:
+                        result['success'] = True
+                        result['face_count'] = face_count
+                        result['message'] = "OK: Visage humain vérifié avec succès!"
+
+                        # Sauvegarder l'image si demandé
+                        if save_image and output_path:
+                            cv2.imwrite(output_path, frame)
+                            result['image_path'] = output_path
+                            print(f"INFO: Image sauvegardée: {output_path}", file=sys.stderr)
+
+                        break
+                    else:
+                        print(f"WARN: Impossible de capturer: {face_count} visage(s) détecté(s)", file=sys.stderr)
 
             # Si aucune capture manuelle et au moins un visage détecté
             if not result['success'] and frames_with_one_face > total_frames * 0.3:
@@ -191,7 +236,7 @@ class HumanVerification:
 
         finally:
             camera.release()
-            # Headless mode: do not open or destroy any GUI windows
+            cv2.destroyAllWindows()
 
         return result
     

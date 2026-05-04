@@ -34,9 +34,6 @@
                     <Button fx:id="uploadAvatarButton" mnemonicParsing="false" onAction="#handleUploadAvatar"
                             styleClass="secondary-button" text="Changer la photo"/>
 
-                    <Button fx:id="registerFaceBtn" mnemonicParsing="false" onAction="#handleRegisterFace"
-                            styleClass="secondary-button" text="Register My Face"/>
-
                     <VBox maxWidth="420.0" minWidth="420.0" spacing="10.0">
                         <children>
                             <TextField fx:id="nameField" promptText="Nom complet" styleClass="form-field"/>

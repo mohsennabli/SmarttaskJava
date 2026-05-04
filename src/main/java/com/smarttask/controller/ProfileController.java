@@ -1,15 +1,9 @@
 package com.smarttask.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
 import com.smarttask.util.AppSession;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,23 +24,15 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.charset.StandardCharsets;
 import java.util.ResourceBundle;
-import java.util.concurrent.TimeUnit;
 
 public class ProfileController implements Initializable {
 
-    private static final Gson GSON = new Gson();
-    private static final String PYTHON_EXECUTABLE = "/home/mohsen-nabli/IdeaProjects/smarttask-javafx/face_env/bin/python3";
-    private static final Path FACE_REGISTER_SCRIPT = Paths.get("/home/mohsen-nabli/IdeaProjects/smarttask-javafx/face_register.py").toAbsolutePath().normalize();
     private static final Path AVATAR_UPLOADS_DIR = Paths.get(
             "src", "main", "resources", "com", "smarttask", "uploads", "avatars"
     );
@@ -56,9 +42,6 @@ public class ProfileController implements Initializable {
 
     @FXML
     private Button uploadAvatarButton;
-
-    @FXML
-    private Button registerFaceBtn;
 
     @FXML
     private TextField nameField;
@@ -213,92 +196,6 @@ public class ProfileController implements Initializable {
     }
 
     @FXML
-    private void handleRegisterFace(ActionEvent event) {
-        if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Session Error", "No logged-in user found.");
-            return;
-        }
-
-        showAlert(
-                Alert.AlertType.INFORMATION,
-                "Face Registration",
-                "Position your face clearly in front of the camera.\n" +
-                        "Only one face must be visible. The camera will activate for 10 seconds."
-        );
-
-        registerFaceBtn.setDisable(true);
-
-        Task<Void> task = new Task<>() {
-            @Override
-            protected Void call() {
-                UserDAO userDAO = new UserDAO();
-                ProcessBuilder processBuilder = new ProcessBuilder(
-                        PYTHON_EXECUTABLE,
-                        FACE_REGISTER_SCRIPT.toString(),
-                        String.valueOf(currentUser.getIduser())
-                );
-                processBuilder.redirectErrorStream(true);
-
-                try {
-                    System.out.println("[DEBUG] Starting face registration process: " + String.join(" ", processBuilder.command()));
-                    
-                    Process process = processBuilder.start();
-                    
-                    // Read output in a separate thread to avoid deadlock
-                    String output = readProcessOutput(process.getInputStream());
-                    
-                    // Wait for process with timeout (30 seconds should be enough for 10s capture + overhead)
-                    boolean completed = process.waitFor(30, TimeUnit.SECONDS);
-                    if (!completed) {
-                        process.destroyForcibly();
-                        throw new IOException("Le script Python a dépassé le délai autorisé (timeout 30s).");
-                    }
-                    
-                    System.out.println("[DEBUG] Process completed with output length: " + output.length());
-                    System.out.println("[DEBUG] Process exit code: " + process.exitValue());
-
-                    if (output.isBlank()) {
-                        throw new IOException("Le script Python n'a renvoye aucune sortie.");
-                    }
-
-                    JsonObject response = JsonParser.parseString(output).getAsJsonObject();
-                    boolean success = response.has("success") && response.get("success").getAsBoolean();
-                    if (!success) {
-                        String message = response.has("message") ? response.get("message").getAsString() : "Face registration failed.";
-                        throw new IOException(message);
-                    }
-
-                    JsonArray embedding = response.getAsJsonArray("embedding");
-                    if (embedding == null || embedding.isEmpty()) {
-                        throw new IOException("Face embedding is missing in the Python response.");
-                    }
-
-                    String embeddingJson = GSON.toJson(embedding);
-                    boolean saved = userDAO.saveFaceEmbedding(currentUser.getIduser(), embeddingJson);
-                    if (!saved) {
-                        throw new IOException("Failed to save face embedding in the database.");
-                    }
-
-                    AppSession.getCurrentUser().setFaceEmbedding(embeddingJson);
-                    Platform.runLater(() -> showAlert(Alert.AlertType.INFORMATION, "Success", "Face registered successfully!"));
-                } catch (Exception e) {
-                    System.err.println("[ERROR] Face registration error: " + e.getMessage());
-                    e.printStackTrace();
-                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Face Registration Error", e.getMessage()));
-                } finally {
-                    Platform.runLater(() -> registerFaceBtn.setDisable(false));
-                }
-
-                return null;
-            }
-        };
-
-        Thread thread = new Thread(task, "smarttask-face-register");
-        thread.setDaemon(true);
-        thread.start();
-    }
-
-    @FXML
     private void handleCancel(ActionEvent event) {
         closeWindow(cancelButton);
     }
@@ -331,25 +228,6 @@ public class ProfileController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    private String readProcessOutput(InputStream inputStream) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        String line;
-        String jsonLine = null;
-        StringBuilder all = new StringBuilder();
-        while ((line = reader.readLine()) != null) {
-            // Log python output for debugging
-            System.out.println("[Python] " + line);
-            all.append(line).append(System.lineSeparator());
-            if (line.trim().startsWith("{") || line.trim().startsWith("[")) {
-                jsonLine = line.trim();
-            }
-        }
-        if (jsonLine != null) {
-            return jsonLine;
-        }
-        return all.toString().trim();
     }
 }
 

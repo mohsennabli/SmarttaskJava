@@ -6,30 +6,19 @@ Tahwissa - Face Recognition Service
 Capture un visage via webcam, calcule un embedding (128D) et compare deux embeddings.
 """
 
-import os
-# Suppress GUI and noisy logs BEFORE importing OpenCV / Qt
-import sys
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-os.environ.setdefault("OPENCV_LOG_LEVEL", "SILENT")
-os.environ.setdefault("QT_LOGGING_RULES", "*.debug=false;qt.qpa.*=false")
-
 import json
+import sys
 import io
 import time
 from datetime import datetime
 
-# Force stdout to UTF-8 FIRST to ensure clean JSON output
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-
-# Redirect stderr to /dev/null AFTER setting stdout to suppress warnings from native libraries
-try:
-    sys.stderr = open(os.devnull, 'w')
-except Exception:
-    pass
-
 import cv2
 import numpy as np
 import face_recognition
+
+# ── Force stdout to UTF-8 on Windows (prevents cp1252 → PHP malformed UTF-8) ──
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
 def _result(success, message, embedding=None, distance=None):
@@ -55,6 +44,10 @@ def _capture_embedding(duration=10):
     best_embedding = None
     best_frame = None
 
+    window_name = "Tahwissa - Face Enrollment (ESPACE: capturer, ESC: annuler)"
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, 800, 600)
+
     try:
         while (time.time() - start_time) < duration:
             ret, frame = camera.read()
@@ -65,11 +58,40 @@ def _capture_embedding(duration=10):
             face_locations = face_recognition.face_locations(rgb, model="hog")
             face_count = len(face_locations)
 
+            status = "Aucun visage detecte"
+            color = (0, 0, 255)
+
             if face_count == 1:
+                status = "Visage detecte - Appuyez sur ESPACE"
+                color = (0, 255, 0)
+
                 encodings = face_recognition.face_encodings(rgb, face_locations)
                 if encodings:
                     best_embedding = encodings[0]
                     best_frame = frame.copy()
+            elif face_count > 1:
+                status = f"{face_count} visages detectes - Une seule personne requise"
+                color = (0, 165, 255)
+
+            for (top, right, bottom, left) in face_locations:
+                cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+
+            elapsed = int(time.time() - start_time)
+            remaining = max(duration - elapsed, 0)
+            cv2.putText(frame, f"Temps restant: {remaining}s", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            cv2.putText(frame, status, (10, 60),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            cv2.putText(frame, "ESPACE: Capturer | ESC: Annuler", (10, frame.shape[0] - 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+            cv2.imshow(window_name, frame)
+            key = cv2.waitKey(1) & 0xFF
+
+            if key == 27:  # ESC
+                return None, "Verification annulee par l'utilisateur"
+            if key == 32 and best_embedding is not None:
+                return best_embedding, "Visage capture avec succes"
 
         if best_embedding is not None and best_frame is not None:
             return best_embedding, "Visage detecte automatiquement"
@@ -77,6 +99,7 @@ def _capture_embedding(duration=10):
         return None, "Aucun visage valide detecte"
     finally:
         camera.release()
+        cv2.destroyAllWindows()
 
 
 def _load_embedding(path):
