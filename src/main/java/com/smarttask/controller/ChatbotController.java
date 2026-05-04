@@ -12,7 +12,7 @@ import javafx.scene.input.KeyCode;
 
 import java.util.List;
 
-public class ChatbotController {
+public class ChatbotController extends DashboardNavigationController {
 
     @FXML private ListView<ChatMessage> chatListView;
     @FXML private TextField inputField;
@@ -24,6 +24,8 @@ public class ChatbotController {
 
     @FXML
     public void initialize() {
+        initializeDashboardHeader();
+
         messages = FXCollections.observableArrayList();
         chatListView.setItems(messages);
 

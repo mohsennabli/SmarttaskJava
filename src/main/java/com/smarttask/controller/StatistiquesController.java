@@ -8,7 +8,7 @@ import javafx.scene.chart.*;
 import javafx.scene.control.Label;
 import java.util.List;
 
-public class StatistiquesController {
+public class StatistiquesController extends DashboardNavigationController {
 
     @FXML private PieChart statutPieChart;
     @FXML private BarChart<String, Number> prioriteBarChart;
@@ -27,6 +27,8 @@ public class StatistiquesController {
 
     @FXML
     public void initialize() {
+        initializeDashboardHeader();
+
         service = new StatistiquesService();
     }
 

@@ -15,7 +15,7 @@ import javafx.stage.Stage;
 
 import java.util.Date;
 
-public class TicketController {
+public class TicketController extends DashboardNavigationController {
 
     @FXML
     private TextField titreField;
@@ -76,6 +76,8 @@ public class TicketController {
 
     @FXML
     public void initialize() {
+        initializeDashboardHeader();
+
         dao = new TicketDAO();
         ticketList = FXCollections.observableArrayList();
 

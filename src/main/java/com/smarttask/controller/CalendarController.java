@@ -14,7 +14,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class CalendarController {
+public class CalendarController extends DashboardNavigationController {
 
     @FXML private Label monthYearLabel;
     @FXML private GridPane calendarGrid;
@@ -31,6 +31,8 @@ public class CalendarController {
 
     @FXML
     public void initialize() {
+        initializeDashboardHeader();
+
         calendarService = new CalendarService();
 
         // Initialiser avec la date courante

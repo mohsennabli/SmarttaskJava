@@ -36,7 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class MyEnrollmentsController implements Initializable {
+public class MyEnrollmentsController extends DashboardNavigationController implements Initializable {
 
     private static final DateTimeFormatter DF = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -92,6 +92,8 @@ public class MyEnrollmentsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        initializeDashboardHeader();
+
         colFormation.setCellValueFactory(new PropertyValueFactory<>("formationTitre"));
         colStatut.setCellValueFactory(new PropertyValueFactory<>("statut"));
         colStart.setCellValueFactory(data -> {

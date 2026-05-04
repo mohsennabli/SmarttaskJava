@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class FormationHubController implements Initializable {
+public class FormationHubController extends DashboardNavigationController implements Initializable {
 
     @FXML
     private TableView<Formation> formationsTable;
@@ -99,6 +99,8 @@ public class FormationHubController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        initializeDashboardHeader();
+
         colTitre.setCellValueFactory(new PropertyValueFactory<>("titre"));
         colNiveau.setCellValueFactory(new PropertyValueFactory<>("niveau"));
         colCategorie.setCellValueFactory(new PropertyValueFactory<>("categorie"));

@@ -26,7 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class TacheListController implements Initializable {
+public class TacheListController extends DashboardNavigationController implements Initializable {
     @FXML
     private TextField searchField;
     @FXML
@@ -46,6 +46,8 @@ public class TacheListController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        initializeDashboardHeader();
+
         // Show addTacheBtn only if manager
         boolean isManager = "manager".equals(AppSession.getCurrentUser().getType());
         addTacheBtn.setVisible(isManager);
@@ -118,7 +120,7 @@ public class TacheListController implements Initializable {
     }
 
     @FXML
-    private void handleLogout() {
+    protected void handleLogout() {
         try {
             AppSession.clear();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/login.fxml"));

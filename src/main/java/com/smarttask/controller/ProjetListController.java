@@ -26,7 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class ProjetListController implements Initializable {
+public class ProjetListController extends DashboardNavigationController implements Initializable {
     @FXML
     private TextField searchField;
     @FXML
@@ -42,6 +42,8 @@ public class ProjetListController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        initializeDashboardHeader();
+
         // Show addProjetBtn only if manager
         boolean isManager = "manager".equals(AppSession.getCurrentUser().getType());
         addProjetBtn.setVisible(isManager);
@@ -87,7 +89,7 @@ public class ProjetListController implements Initializable {
     }
 
     @FXML
-    private void handleLogout() {
+    protected void handleLogout() {
         try {
             AppSession.clear();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/login.fxml"));

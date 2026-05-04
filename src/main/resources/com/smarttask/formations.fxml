@@ -1,48 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-
-<AnchorPane minHeight="600.0" minWidth="1000.0" prefHeight="720.0" prefWidth="1280.0"
-            styleClass="app-root" stylesheets="@styles/styles.css" xmlns:fx="http://javafx.com/fxml/1"
+<BorderPane prefHeight="720.0" prefWidth="1280.0" styleClass="app-root"
+            stylesheets="@styles/styles.css" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.smarttask.controller.FormationHubController">
-    <children>
-        <VBox spacing="14.0" styleClass="page-container" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <padding>
-                <Insets bottom="18.0" left="18.0" right="18.0" top="18.0"/>
-            </padding>
+    <top>
+        <HBox styleClass="top-bar">
+            <Label styleClass="app-brand" text="SmartTask"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="currentUserLabel" styleClass="user-label" text=""/>
+            <Button onAction="#handleLogout" styleClass="danger-button" text="🚪 Déconnexion"/>
+        </HBox>
+    </top>
+    <left>
+        <VBox prefWidth="220.0" styleClass="sidebar">
+            <Label styleClass="sidebar-heading" text="Navigation"/>
+            <Button onAction="#handleGoToUsers" styleClass="nav-button" text="👥 Utilisateurs"/>
+            <Button onAction="#handleGoToProjets" styleClass="nav-button" text="📋 Projets"/>
+            <Button onAction="#handleGoToTaches" styleClass="nav-button" text="✅ Tâches"/>
+            <Button fx:id="formationsNavBtn" onAction="#handleGoToFormations" styleClass="nav-button active-nav" text="🎓 Formations"/>
+            <Button onAction="#handleGoToMyEnrollments" styleClass="nav-button" text="📝 Mes Inscriptions"/>
+            <Button onAction="#handleGoToTickets" styleClass="nav-button" text="🎫 Tickets"/>
+            <Button onAction="#handleGoToCalendar" styleClass="nav-button" text="📅 Calendrier"/>
+            <Button fx:id="statsNavBtn" onAction="#handleGoToStatistiques" styleClass="nav-button" text="📊 Statistiques"/>
+            <Button onAction="#handleGoToChatbot" styleClass="nav-button" text="🤖 Chatbot"/>
+            <Separator/>
+            <Button onAction="#handleProfile" styleClass="nav-button" text="👤 Mon Profil"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="14.0" styleClass="page-container">
+            <padding><Insets top="18.0" right="18.0" bottom="18.0" left="18.0"/></padding>
             <VBox spacing="16.0" styleClass="page-card" VBox.vgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="page-header">
                     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                         <Label styleClass="section-title" text="Formation Management"/>
-                        <Label styleClass="dashboard-subtitle"
-                               text="Browse formations, view details, and enroll. Track progress from My Enrollments."/>
+                        <Label styleClass="dashboard-subtitle" text="Browse formations, view details, and enroll."/>
                     </VBox>
-                    <Button fx:id="myEnrollmentsButton" onAction="#handleMyEnrollments" styleClass="primary-button"
-                            text="My Enrollments"/>
+                    <Button fx:id="myEnrollmentsButton" onAction="#handleMyEnrollments" styleClass="primary-button" text="My Enrollments"/>
                     <Button fx:id="backButton" onAction="#handleBack" styleClass="secondary-button" text="Back"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="toolbar">
-                    <TextField fx:id="searchField" HBox.hgrow="ALWAYS" promptText="Search by title, category, level..."
-                               styleClass="form-field"/>
+                    <TextField fx:id="searchField" HBox.hgrow="ALWAYS" promptText="Search by title, category, level..." styleClass="form-field"/>
                     <Button fx:id="searchButton" onAction="#handleSearch" styleClass="primary-button" text="Search"/>
                     <Button fx:id="resetButton" onAction="#handleReset" styleClass="secondary-button" text="Reset"/>
-                    <HBox HBox.hgrow="ALWAYS" minWidth="12.0"/>
-                    <Button fx:id="addFormationButton" onAction="#handleAddFormation" styleClass="secondary-button"
-                            text="Add formation"/>
-                    <Button fx:id="editFormationButton" onAction="#handleEditFormation" styleClass="primary-button"
-                            text="Edit"/>
-                    <Button fx:id="deleteFormationButton" onAction="#handleDeleteFormation" styleClass="danger-button"
-                            text="Delete"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="addFormationButton" onAction="#handleAddFormation" styleClass="secondary-button" text="Add formation"/>
+                    <Button fx:id="editFormationButton" onAction="#handleEditFormation" styleClass="primary-button" text="Edit"/>
+                    <Button fx:id="deleteFormationButton" onAction="#handleDeleteFormation" styleClass="danger-button" text="Delete"/>
                 </HBox>
                 <SplitPane dividerPositions="0.55" VBox.vgrow="ALWAYS">
                     <TableView fx:id="formationsTable" styleClass="table-surface" minHeight="200.0">
@@ -56,22 +72,19 @@
                             <TableColumn fx:id="colStatut" prefWidth="100.0" text="Status"/>
                         </columns>
                     </TableView>
-                    <VBox spacing="10.0" styleClass="detail-panel">
-                        <padding>
-                            <Insets bottom="12.0" left="16.0" right="16.0" top="12.0"/>
-                        </padding>
+                    <VBox spacing="10.0" styleClass="entity-card">
+                        <padding><Insets bottom="12.0" left="16.0" right="16.0" top="12.0"/></padding>
                         <Label styleClass="section-title" text="Details"/>
                         <Label fx:id="detailTitleLabel" styleClass="stats-title" text="—"/>
                         <Label fx:id="detailMetaLabel" styleClass="dashboard-subtitle" text=" "/>
                         <Label text="Description" styleClass="stats-title"/>
                         <Label fx:id="detailDescriptionLabel" wrapText="true" styleClass="dashboard-subtitle" text="—"/>
                         <HBox spacing="10.0">
-                            <Button fx:id="enrollButton" onAction="#handleEnroll" styleClass="primary-button"
-                                    text="Enroll"/>
+                            <Button fx:id="enrollButton" onAction="#handleEnroll" styleClass="primary-button" text="Enroll"/>
                         </HBox>
                     </VBox>
                 </SplitPane>
             </VBox>
         </VBox>
-    </children>
-</AnchorPane>
+    </center>
+</BorderPane>
