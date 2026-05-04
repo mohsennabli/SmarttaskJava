@@ -14,6 +14,7 @@ module com.smarttask {
     requires io;
     requires layout;
     requires com.google.gson;
+    requires org.apache.pdfbox;
 
     opens com.smarttask to javafx.graphics, javafx.fxml;
     opens com.smarttask.controller to javafx.fxml;

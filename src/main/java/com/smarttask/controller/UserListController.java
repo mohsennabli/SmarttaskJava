@@ -67,6 +67,9 @@ public class UserListController implements Initializable {
     private Button profileButton;
 
     @FXML
+    private Button projetsButton;
+
+    @FXML
     private TextField searchField;
 
     @FXML
@@ -274,6 +277,18 @@ public class UserListController implements Initializable {
             loadUsers();
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open profile screen.");
+        }
+    }
+
+    @FXML
+    private void handleGoToProjets(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/projet-list.fxml"));
+            Stage stage = (Stage) usersTable.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+            stage.show();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Navigation Error", "Unable to open project management screen.");
         }
     }
 

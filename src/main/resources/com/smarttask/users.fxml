@@ -60,6 +60,8 @@
                 </HBox>
             </VBox>
         </VBox>
+        <Button fx:id="projetsButton" onAction="#handleGoToProjets" styleClass="secondary-button" text="📋 Gestion des Projets"
+                AnchorPane.rightAnchor="160.0" AnchorPane.topAnchor="10.0"/>
         <Button fx:id="profileButton" onAction="#handleProfile" styleClass="secondary-button" text="👤 Mon Profil"
                 AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
     </children>
