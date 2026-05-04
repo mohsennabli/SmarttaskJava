@@ -26,7 +26,8 @@ public final class AppRouter {
     }
 
     public static void showLanding() {
-        showSimple("/gestionprojet/fxml/landing.fxml", "SmartTask JavaFX");
+        // Use the application's own login view as the landing page
+        showSimple("/com/smarttask/login.fxml", "SmartTask JavaFX");
     }
 
     public static void showFrontHome() {
@@ -118,7 +119,8 @@ public final class AppRouter {
 
     private static void applyScene(Parent root, String title) {
         Scene scene = new Scene(root);
-        var cssResource = AppRouter.class.getResource("/gestionprojet/css/app.css");
+        // Use the project's stylesheet location
+        var cssResource = AppRouter.class.getResource("/com/smarttask/styles/styles.css");
         if (cssResource != null) {
             scene.getStylesheets().add(cssResource.toExternalForm());
         }

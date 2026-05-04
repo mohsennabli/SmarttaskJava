@@ -284,7 +284,7 @@ public class UserListController implements Initializable {
     private void handleGoToProjets(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/projet-list.fxml"));
-            Stage stage = (Stage) usersTable.getScene().getWindow();
+            Stage stage = (Stage) projetsButton.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
             stage.show();
         } catch (IOException e) {

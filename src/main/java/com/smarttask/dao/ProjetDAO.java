@@ -145,4 +145,3 @@ public class ProjetDAO {
         return new Projet(id, nom, description, dateDebut, dateEcheance, statut);
     }
 }
-

@@ -10,11 +10,11 @@ module com.smarttask {
     requires jbcrypt;
     requires jakarta.mail;
     requires jakarta.activation;
+    requires org.apache.pdfbox;
     requires kernel;
     requires io;
     requires layout;
     requires com.google.gson;
-    requires org.apache.pdfbox;
 
     opens com.smarttask to javafx.graphics, javafx.fxml;
     opens com.smarttask.controller to javafx.fxml;

@@ -171,4 +171,3 @@ public class TacheDAO {
         return new Tache(id, libelle, priorite, dateLimite, etat, projetId);
     }
 }
-

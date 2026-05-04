@@ -78,4 +78,3 @@ public class Projet {
         return nom;
     }
 }
-
