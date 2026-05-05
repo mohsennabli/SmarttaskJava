@@ -1,12 +1,12 @@
 package com.smarttask.model;
 
-class user123 {
+public class User123 {
     private final String email;
     private final String password;
     private final String fullName;
     private final UserRole role;
 
-    public user123(String email, String password, String fullName, UserRole role) {
+    public User123(String email, String password, String fullName, UserRole role) {
         this.email = email;
         this.password = password;
         this.fullName = fullName;

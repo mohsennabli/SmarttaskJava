@@ -28,7 +28,8 @@ public class FaceRecognitionService {
         return thread;
     });
 
-    private static final String PYTHON_EXECUTABLE = readConfig("SMARTTASK_PYTHON_EXECUTABLE", "python3");
+    private static final String PYTHON_EXECUTABLE = readConfig("SMARTTASK_PYTHON_EXECUTABLE", 
+        "/home/mohsen-nabli/IdeaProjects/smarttask-javafx/face_env/bin/python3");
     private static final Path FACE_RECOGNITION_SCRIPT = resolveScript("SMARTTASK_FACE_RECOGNITION_SCRIPT", "face_recognition_service.py");
     private static final Path HUMAN_VERIFICATION_SCRIPT = resolveScript("SMARTTASK_HUMAN_VERIFICATION_SCRIPT", "human_verification.py");
     private static final double FACE_MATCH_THRESHOLD = readDoubleConfig("SMARTTASK_FACE_MATCH_THRESHOLD", 0.60d);

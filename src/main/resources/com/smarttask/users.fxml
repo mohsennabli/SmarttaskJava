@@ -54,11 +54,10 @@
                 </HBox>
                 <TableView fx:id="usersTable" VBox.vgrow="ALWAYS" styleClass="table-surface">
                     <columns>
-                        <TableColumn fx:id="colId" prefWidth="90.0" text="ID"/>
-                        <TableColumn fx:id="colName" prefWidth="220.0" text="Name"/>
-                        <TableColumn fx:id="colEmail" prefWidth="320.0" text="Email"/>
-                        <TableColumn fx:id="colType" prefWidth="140.0" text="Type"/>
-                        <TableColumn fx:id="colEnabled" prefWidth="140.0" text="Enabled"/>
+                        <TableColumn fx:id="colName" prefWidth="250.0" text="Name"/>
+                        <TableColumn fx:id="colEmail" prefWidth="350.0" text="Email"/>
+                        <TableColumn fx:id="colType" prefWidth="150.0" text="Type"/>
+                        <TableColumn fx:id="colEnabled" prefWidth="150.0" text="Enabled"/>
                     </columns>
                 </TableView>
                 <HBox alignment="CENTER_LEFT" spacing="12.0">

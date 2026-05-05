@@ -3,13 +3,15 @@
 """
 Tahwissa - Face Recognition Service
 ===================================
-Capture un visage via webcam, calcule un embedding (128D) et compare deux embeddings.
+Compare a captured face image against multiple candidate embeddings (for face login).
+Also supports enrollment mode to capture and store a new face embedding.
 """
 
 import json
 import sys
 import io
 import time
+import argparse
 from datetime import datetime
 
 import cv2
@@ -21,13 +23,21 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
-def _result(success, message, embedding=None, distance=None):
+def _result(success, message, embedding=None, distance=None, face_count=None,
+            user_id=None, email=None, name=None, confidence=None, threshold=None, candidate_count=None):
     payload = {
         "success": bool(success),
         "message": message,
         "timestamp": datetime.now().isoformat(),
         "embedding": embedding,
         "distance": distance,
+        "face_count": face_count,
+        "user_id": user_id,
+        "email": email,
+        "name": name,
+        "confidence": confidence,
+        "threshold": threshold,
+        "candidate_count": candidate_count,
     }
     print(json.dumps(payload, ensure_ascii=True))
 
@@ -102,22 +112,84 @@ def _capture_embedding(duration=10):
         cv2.destroyAllWindows()
 
 
-def _load_embedding(path):
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return np.array(data, dtype=np.float64)
+def _load_image_embedding(image_path):
+    """Load an image from disk and compute its face embedding."""
+    image = cv2.imread(image_path)
+    if image is None:
+        return None, None, 0, "Impossible de charger l'image"
+
+    rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb, model="hog")
+    face_count = len(face_locations)
+
+    if face_count != 1:
+        return None, None, face_count, f"Image doit contenir exactement 1 visage, trouvé {face_count}"
+
+    encodings = face_recognition.face_encodings(rgb, face_locations)
+    if not encodings:
+        return None, None, face_count, "Impossible de calculer l'embedding facial"
+
+    return encodings[0], image, face_count, "Embedding calculé avec succès"
+
+
+def _load_candidates(candidates_path):
+    """Load candidates from JSON file."""
+    try:
+        with open(candidates_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else [], None
+    except Exception as e:
+        return [], str(e)
+
+
+def _verify_against_candidates(image_embedding, candidates, threshold):
+    """Compare image embedding against all candidates and return best match."""
+    if not candidates:
+        return False, "Aucun candidat disponible", None, None, None, None
+
+    best_distance = float('inf')
+    best_match = None
+
+    for candidate in candidates:
+        try:
+            candidate_embedding = np.array(candidate.get("face_embedding", []), dtype=np.float64)
+            if len(candidate_embedding) == 0:
+                continue
+
+            distance = float(face_recognition.face_distance([candidate_embedding], image_embedding)[0])
+            if distance < best_distance:
+                best_distance = distance
+                best_match = candidate
+        except Exception:
+            continue
+
+    if best_match is None:
+        return False, "Aucune correspondance trouvée", None, None, None, None
+
+    success = best_distance <= threshold
+    msg = "Visage reconnu" if success else "Visage non reconnu"
+
+    return success, msg, best_distance, best_match.get("user_id"), best_match.get("email"), best_match.get("name")
 
 
 def main():
-    if len(sys.argv) < 2:
-        _result(False, "Usage: python face_recognition_service.py <enroll|verify> [args]")
+    parser = argparse.ArgumentParser(description="Face Recognition Service")
+    parser.add_argument("mode", choices=["enroll", "verify"], help="Mode: enroll or verify")
+    parser.add_argument("--image", type=str, help="Path to image file (for verify mode)")
+    parser.add_argument("--candidates", type=str, help="Path to candidates JSON file (for verify mode)")
+    parser.add_argument("--threshold", type=float, default=0.60, help="Distance threshold for matching (default: 0.60)")
+    parser.add_argument("--duration", type=int, default=10, help="Capture duration in seconds (for enroll mode)")
+
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        _result(False, "Arguments invalides")
         sys.exit(1)
 
-    mode = sys.argv[1].lower()
+    mode = args.mode.lower()
 
     if mode == "enroll":
-        duration = int(sys.argv[2]) if len(sys.argv) > 2 else 10
-        embedding, message = _capture_embedding(duration)
+        embedding, message = _capture_embedding(args.duration)
         if embedding is None:
             _result(False, message)
             sys.exit(1)
@@ -125,26 +197,54 @@ def main():
         sys.exit(0)
 
     if mode == "verify":
-        if len(sys.argv) < 3:
-            _result(False, "Chemin d'embedding requis")
-            sys.exit(1)
-        stored_path = sys.argv[2]
-        duration = int(sys.argv[3]) if len(sys.argv) > 3 else 10
-        threshold = float(sys.argv[4]) if len(sys.argv) > 4 else 0.55
-
-        stored_embedding = _load_embedding(stored_path)
-        live_embedding, message = _capture_embedding(duration)
-        if live_embedding is None:
-            _result(False, message)
+        # Verify mode with image file and candidates JSON
+        if not args.image:
+            _result(False, "Chemin d'image requis pour le mode verify")
             sys.exit(1)
 
-        distance = float(face_recognition.face_distance([stored_embedding], live_embedding)[0])
-        success = distance <= threshold
-        msg = "Visage reconnu" if success else "Visage non reconnu"
-        _result(success, msg, embedding=None, distance=distance)
+        if not args.candidates:
+            _result(False, "Chemin d'embeddings candidats requis pour le mode verify")
+            sys.exit(1)
+
+        # Load image and compute embedding
+        image_embedding, image, face_count, embed_msg = _load_image_embedding(args.image)
+        if image_embedding is None:
+            _result(False, embed_msg, face_count=face_count)
+            sys.exit(1)
+
+        # Load candidates
+        candidates, error = _load_candidates(args.candidates)
+        if error:
+            _result(False, f"Erreur lors du chargement des candidats: {error}", face_count=face_count)
+            sys.exit(1)
+
+        if not candidates:
+            _result(False, "Aucun candidat disponible", face_count=face_count, candidate_count=0)
+            sys.exit(1)
+
+        # Compare and find best match
+        success, msg, distance, user_id, email, name = _verify_against_candidates(
+            image_embedding, candidates, args.threshold
+        )
+
+        confidence = 1.0 - distance if distance is not None else 0.0
+
+        _result(
+            success,
+            msg,
+            embedding=None,
+            distance=distance,
+            face_count=face_count,
+            user_id=user_id,
+            email=email,
+            name=name,
+            confidence=confidence,
+            threshold=args.threshold,
+            candidate_count=len(candidates)
+        )
         sys.exit(0 if success else 1)
 
-    _result(False, "Mode inconnu. Utilisez 'enroll' ou 'verify'")
+    _result(False, "Mode inconnu")
     sys.exit(1)
 
 

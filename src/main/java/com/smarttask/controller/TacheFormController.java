@@ -115,7 +115,7 @@ public class TacheFormController implements Initializable {
             isValid = false;
         }
 
-        if (dateLimite == null || !dateLimite.isAfter(LocalDate.now())) {
+        if (dateLimite == null || dateLimite.isBefore(LocalDate.now())) {
             dateLimiteError.setText("La date limite doit être après aujourd'hui");
             isValid = false;
         }

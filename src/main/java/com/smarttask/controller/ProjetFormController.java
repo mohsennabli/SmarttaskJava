@@ -93,12 +93,12 @@ public class ProjetFormController implements Initializable {
             isValid = false;
         }
 
-        if (dateDebut == null || !dateDebut.isAfter(LocalDate.now())) {
+        if (dateDebut == null || dateDebut.isBefore(LocalDate.now())) {
             dateDebutError.setText("La date de début doit être après aujourd'hui");
             isValid = false;
         }
 
-        if (dateEcheance == null || dateDebut != null && !dateEcheance.isAfter(dateDebut)) {
+        if (dateEcheance == null || dateDebut != null && dateEcheance.isBefore(dateDebut)) {
             dateEcheanceError.setText("La date d'échéance doit être après la date de début");
             isValid = false;
         }

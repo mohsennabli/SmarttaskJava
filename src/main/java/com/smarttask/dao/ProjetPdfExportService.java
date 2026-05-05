@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.Locale;
 
 public class ProjetPdfExportService {
+    private static final PDFont HELVETICA = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+    private static final PDFont HELVETICA_BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+    private static final PDFont HELVETICA_OBLIQUE = new PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE);
     private static final float PAGE_WIDTH = PDRectangle.A4.getWidth();
     private static final float PAGE_HEIGHT = PDRectangle.A4.getHeight();
     private static final float MARGIN = 36f;
     private static final float CONTENT_WIDTH = PAGE_WIDTH - (MARGIN * 2);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
     private static final DateTimeFormatter GENERATED_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final PDFont FONT_HELVETICA = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-    private static final PDFont FONT_HELVETICA_BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-    private static final PDFont FONT_HELVETICA_OBLIQUE = new PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE);
 
     public Path exportProjects(List<Projet> projets, Path outputFile) {
         List<Projet> sortedProjects = new ArrayList<>(projets);
@@ -78,13 +78,13 @@ public class ProjetPdfExportService {
 
         cursor.content.setNonStrokingColor(Color.WHITE);
         cursor.content.beginText();
-        cursor.content.setFont(FONT_HELVETICA_BOLD, 22);
+        cursor.content.setFont(HELVETICA_BOLD, 22);
         cursor.content.newLineAtOffset(MARGIN, PAGE_HEIGHT - 58f);
         cursor.content.showText(title);
         cursor.content.endText();
 
         cursor.content.beginText();
-        cursor.content.setFont(FONT_HELVETICA, 11);
+        cursor.content.setFont(HELVETICA, 11);
         cursor.content.newLineAtOffset(MARGIN, PAGE_HEIGHT - 76f);
         cursor.content.showText(subtitle + "  |  Genere le " + LocalDateTime.now().format(GENERATED_FORMATTER));
         cursor.content.endText();
@@ -123,13 +123,13 @@ public class ProjetPdfExportService {
 
         cursor.content.setNonStrokingColor(new Color(31, 41, 55));
         cursor.content.beginText();
-        cursor.content.setFont(FONT_HELVETICA_BOLD, 10);
+        cursor.content.setFont(HELVETICA_BOLD, 10);
         cursor.content.newLineAtOffset(x + 12f, y + height - 18f);
         cursor.content.showText(metric.label().toUpperCase(Locale.ROOT));
         cursor.content.endText();
 
         cursor.content.beginText();
-        cursor.content.setFont(FONT_HELVETICA_BOLD, 22);
+        cursor.content.setFont(HELVETICA_BOLD, 22);
         cursor.content.newLineAtOffset(x + 12f, y + 18f);
         cursor.content.showText(metric.value());
         cursor.content.endText();
@@ -154,20 +154,20 @@ public class ProjetPdfExportService {
         cursor.content.addRect(MARGIN, sectionTop - 18f, CONTENT_WIDTH, 18f);
         cursor.content.fill();
 
-        writeText(cursor, projet.getNom(), FONT_HELVETICA_BOLD, 18, MARGIN + 16f, sectionTop - 44f, new Color(29, 59, 83));
-        writeText(cursor, formatStatus(projet.getStatut()), FONT_HELVETICA_BOLD, 10, PAGE_WIDTH - 120f, sectionTop - 40f, accent);
-        writeWrappedText(cursor, projet.getDescription(), FONT_HELVETICA, 11, MARGIN + 16f, sectionTop - 62f, CONTENT_WIDTH - 32f, 13f, new Color(55, 65, 81));
+        writeText(cursor, projet.getNom(), HELVETICA_BOLD, 18, MARGIN + 16f, sectionTop - 44f, new Color(29, 59, 83));
+        writeText(cursor, formatStatus(projet.getStatut()), HELVETICA_BOLD, 10, PAGE_WIDTH - 120f, sectionTop - 40f, accent);
+        writeWrappedText(cursor, projet.getDescription(), HELVETICA, 11, MARGIN + 16f, sectionTop - 62f, CONTENT_WIDTH - 32f, 13f, new Color(55, 65, 81));
 
         drawBadge(cursor, MARGIN + 16f, sectionTop - 100f, 112f, 20f, "Debut: " + projet.getDateDebut().format(DATE_FORMATTER), new Color(219, 234, 254), new Color(30, 64, 175));
         drawBadge(cursor, MARGIN + 136f, sectionTop - 100f, 138f, 20f, "Echeance: " + projet.getDateEcheance().format(DATE_FORMATTER), new Color(254, 243, 199), new Color(180, 83, 9));
         drawBadge(cursor, MARGIN + 282f, sectionTop - 100f, 122f, 20f, taches.isEmpty() ? "0 tache" : taches.size() + " taches", new Color(220, 252, 231), new Color(22, 101, 52));
 
         float tasksStart = sectionTop - 130f;
-        writeText(cursor, "Taches associees", FONT_HELVETICA_BOLD, 13, MARGIN + 16f, tasksStart, new Color(29, 59, 83));
+        writeText(cursor, "Taches associees", HELVETICA_BOLD, 13, MARGIN + 16f, tasksStart, new Color(29, 59, 83));
         float taskY = tasksStart - 18f;
 
         if (taches.isEmpty()) {
-            writeText(cursor, "Aucune tache associee a ce projet.", FONT_HELVETICA_OBLIQUE, 11, MARGIN + 20f, taskY, new Color(107, 114, 128));
+            writeText(cursor, "Aucune tache associee a ce projet.", HELVETICA_OBLIQUE, 11, MARGIN + 20f, taskY, new Color(107, 114, 128));
             cursor.y = taskY - 22f;
             return;
         }
@@ -176,7 +176,7 @@ public class ProjetPdfExportService {
             ensureSpace(cursor, 18f);
             String line = "- " + tache.getLibelle() + "  |  Priorite: " + capitalize(tache.getPriorite()) + "  |  Etat: "
                     + formatTaskState(tache.getEtat()) + "  |  Limite: " + tache.getDateLimite().format(DATE_FORMATTER);
-            writeWrappedText(cursor, line, FONT_HELVETICA, 10, MARGIN + 24f, taskY, CONTENT_WIDTH - 40f, 12f, new Color(55, 65, 81));
+            writeWrappedText(cursor, line, HELVETICA, 10, MARGIN + 24f, taskY, CONTENT_WIDTH - 40f, 12f, new Color(55, 65, 81));
             taskY -= 14f;
         }
 
@@ -208,7 +208,7 @@ public class ProjetPdfExportService {
 
         cursor.content.setNonStrokingColor(foreground);
         cursor.content.beginText();
-        cursor.content.setFont(FONT_HELVETICA_BOLD, 9);
+        cursor.content.setFont(HELVETICA_BOLD, 9);
         cursor.content.newLineAtOffset(x + 7f, y + 6f);
         cursor.content.showText(text);
         cursor.content.endText();

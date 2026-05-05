@@ -1,5 +1,6 @@
 package com.smarttask.controller;
 
+import com.smarttask.dao.TicketDAO;
 import com.smarttask.model.Ticket;
 import com.smarttask.service.StatistiquesService;
 import javafx.collections.FXCollections;
@@ -30,6 +31,17 @@ public class StatistiquesController extends DashboardNavigationController {
         initializeDashboardHeader();
 
         service = new StatistiquesService();
+        
+        // Load tickets from database
+        try {
+            TicketDAO ticketDAO = new TicketDAO();
+            tickets = ticketDAO.getAll();
+            loadAllStatistics();
+        } catch (Exception e) {
+            System.err.println("Error loading tickets for statistics: " + e.getMessage());
+            e.printStackTrace();
+            loadEmptyData();
+        }
     }
 
     public void setTickets(List<Ticket> tickets) {

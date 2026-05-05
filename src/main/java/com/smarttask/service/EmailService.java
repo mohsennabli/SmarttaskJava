@@ -18,7 +18,7 @@ public class EmailService {
     private static final String SMTP_HOST = readConfig("SMARTTASK_SMTP_HOST", "smtp.gmail.com");
     private static final int SMTP_PORT = readIntConfig("SMARTTASK_SMTP_PORT", 465);
     private static final String SMTP_USERNAME = readConfig("SMARTTASK_SMTP_USERNAME", "mohsennabli321@gmail.com");
-    private static final String SMTP_PASSWORD = readConfig("SMARTTASK_SMTP_PASSWORD", "Yubjuivfyaehuquda");
+    private static final String SMTP_PASSWORD = readConfig("SMARTTASK_SMTP_PASSWORD", "urgbgpbwljknzril");
     private static final String SMTP_FROM = readConfig("SMARTTASK_SMTP_FROM", SMTP_USERNAME);
     private static final String SMTP_FROM_NAME = readConfig("SMARTTASK_SMTP_FROM_NAME", "SmartTask");
     private static final boolean SMTP_TLS_ENABLED = readBooleanConfig("SMARTTASK_SMTP_TLS_ENABLED", true);
@@ -30,7 +30,7 @@ public class EmailService {
 
     public boolean sendPasswordResetEmail(String recipientEmail, String recipientName, String resetToken, LocalDateTime expiresAt) {
         if (!isConfiguredStatic()) {
-            System.err.println("SMTP is not configured. Set SMARTTASK_SMTP_* keys in your .env or environment variables.");
+            System.err.println("SMTP is not configured. Set mail.smtp.* keys in your .env file or SMARTTASK_SMTP_* environment variables.");
             return false;
         }
 

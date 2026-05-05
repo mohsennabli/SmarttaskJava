@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import com.smarttask.util.AlertUtil;
 import com.smarttask.util.DBconnexion;
+import com.smarttask.util.EnvLoader;
 
 public class MainApplication extends Application {
     @Override
@@ -20,6 +21,8 @@ public class MainApplication extends Application {
     }
 
     public static void main(String[] args) {
+        // Load environment variables from .env file before anything else
+        EnvLoader.load();
         launch();
     }
 }

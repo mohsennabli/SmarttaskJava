@@ -14,6 +14,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
 import java.util.Date;
+import java.net.URL;
 
 public class TicketController extends DashboardNavigationController {
 
@@ -346,10 +347,23 @@ public class TicketController extends DashboardNavigationController {
 
     private void openCommentaireInterface(Ticket ticket) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/smarttask/Commentaire.fxml"));
+            URL fxml = getClass().getResource("/com/smarttask/Commentaire.fxml");
+            if (fxml == null) {
+                showAlert("Erreur", "Le formulaire des commentaires est introuvable: /com/smarttask/Commentaire.fxml",
+                        Alert.AlertType.ERROR);
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxml);
             Parent root = loader.load();
 
             CommentaireController commentaireController = loader.getController();
+            if (commentaireController == null) {
+                showAlert("Erreur", "Le contrôleur des commentaires n'a pas pu être initialisé.",
+                        Alert.AlertType.ERROR);
+                return;
+            }
+
             commentaireController.setTicketId(ticket.getId());
             commentaireController.setTicketTitle(ticket.getTitre());
 

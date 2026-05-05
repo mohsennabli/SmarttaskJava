@@ -44,7 +44,7 @@
             <VBox spacing="16.0" styleClass="page-card" VBox.vgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="page-header">
                     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
-                        <Label styleClass="section-title" text="Task Management"/>
+                        <Label fx:id="pageTitle" styleClass="section-title" text="Gestion des tâches"/>
                         <Label styleClass="dashboard-subtitle" text="Browse tasks, filter them, and open project context."/>
                     </VBox>
                     <Button fx:id="addTacheBtn" onAction="#handleAddTache" styleClass="secondary-button" text="Ajouter une tâche"/>

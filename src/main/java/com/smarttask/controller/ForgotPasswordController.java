@@ -81,7 +81,7 @@ public class ForgotPasswordController implements Initializable {
                     } else {
                         statusLabel.setText("Unable to send the reset email.");
                         showAlert(Alert.AlertType.ERROR, "Reset Failed",
-                                "Unable to send the password reset email. Please verify the email service configuration.");
+                                "Unable to send the password reset email. Please verify the email service configuration in your .env file.");
                     }
                 }));
     }
