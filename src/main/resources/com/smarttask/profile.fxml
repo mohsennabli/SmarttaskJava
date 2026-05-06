@@ -34,6 +34,15 @@
                     <Button fx:id="uploadAvatarButton" mnemonicParsing="false" onAction="#handleUploadAvatar"
                             styleClass="secondary-button" text="Changer la photo"/>
 
+                    <VBox maxWidth="420.0" minWidth="420.0" spacing="6.0">
+                        <children>
+                            <Label styleClass="subtitle-text" text="Reconnaissance faciale"/>
+                            <Label styleClass="stats-note" text="Enregistrez votre visage pour la connexion par caméra." wrapText="true"/>
+                            <Button fx:id="registerFaceButton" mnemonicParsing="false" onAction="#handleRegisterFace"
+                                    styleClass="primary-button" text="Enregistrer mon visage"/>
+                        </children>
+                    </VBox>
+
                     <VBox maxWidth="420.0" minWidth="420.0" spacing="10.0">
                         <children>
                             <TextField fx:id="nameField" promptText="Nom complet" styleClass="form-field"/>

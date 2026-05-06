@@ -2,7 +2,9 @@ package com.smarttask.controller;
 
 import com.smarttask.dao.UserDAO;
 import com.smarttask.model.User;
+import com.smarttask.service.FaceRecognitionService;
 import com.smarttask.util.AppSession;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -29,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.CompletableFuture;
 import java.util.ResourceBundle;
 
 public class ProfileController implements Initializable {
@@ -42,6 +45,9 @@ public class ProfileController implements Initializable {
 
     @FXML
     private Button uploadAvatarButton;
+
+    @FXML
+    private Button registerFaceButton;
 
     @FXML
     private TextField nameField;
@@ -69,6 +75,7 @@ public class ProfileController implements Initializable {
 
     private User currentUser;
     private String newAvatarName;
+    private final FaceRecognitionService faceRecognitionService = new FaceRecognitionService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -134,6 +141,47 @@ public class ProfileController implements Initializable {
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Avatar Error", "Unable to upload avatar image.");
         }
+    }
+
+    @FXML
+    private void handleRegisterFace(ActionEvent event) {
+        if (currentUser == null) {
+            showAlert(Alert.AlertType.ERROR, "Session Error", "No logged-in user found.");
+            return;
+        }
+
+        if (registerFaceButton != null) {
+            registerFaceButton.setDisable(true);
+        }
+
+        User userToEnroll = currentUser;
+        CompletableFuture
+                .supplyAsync(() -> faceRecognitionService.registerFaceForUser(userToEnroll))
+                .whenComplete((result, throwable) -> Platform.runLater(() -> {
+                    if (registerFaceButton != null) {
+                        registerFaceButton.setDisable(false);
+                    }
+
+                    if (throwable != null) {
+                        showAlert(Alert.AlertType.ERROR, "Face Registration Error", "Unable to register your face.");
+                        return;
+                    }
+
+                    if (result != null && result.isSuccess()) {
+                        if (result.getUser() != null) {
+                            currentUser = result.getUser();
+                        }
+                        AppSession.setCurrentUser(currentUser);
+                        showAlert(
+                                Alert.AlertType.INFORMATION,
+                                "Face Registration",
+                                "Votre visage a ete enregistre avec succes."
+                        );
+                    } else {
+                        String message = result != null ? result.getMessage() : "Unknown error";
+                        showAlert(Alert.AlertType.ERROR, "Face Registration Error", message);
+                    }
+                }));
     }
 
     @FXML

@@ -134,6 +134,38 @@ public class FaceRecognitionService {
         }
     }
 
+    public FaceRegistrationResult registerFaceForUser(User user) {
+        if (user == null) {
+            return FaceRegistrationResult.failure("Aucun utilisateur connecté.");
+        }
+
+        if (user.getIduser() <= 0) {
+            return FaceRegistrationResult.failure("Identifiant utilisateur invalide.");
+        }
+
+        try {
+            ensureScriptExists(FACE_RECOGNITION_SCRIPT, "face registration");
+
+            FaceEnrollmentResult enrollmentResult = captureFaceEmbedding();
+            if (!enrollmentResult.success || enrollmentResult.embedding == null || enrollmentResult.embedding.length == 0) {
+                return FaceRegistrationResult.failure(friendlyMessage(enrollmentResult.message));
+            }
+
+            String embeddingJson = GSON.toJson(enrollmentResult.embedding);
+            if (!userDAO.saveFaceEmbedding(user.getIduser(), embeddingJson)) {
+                return FaceRegistrationResult.failure("Impossible d'enregistrer l'empreinte faciale dans la base de données.");
+            }
+
+            user.setFaceEmbedding(embeddingJson);
+            return FaceRegistrationResult.success(user, embeddingJson, friendlyMessage(enrollmentResult.message), enrollmentResult.embedding.length);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return FaceRegistrationResult.failure("L'enregistrement du visage a été interrompu.");
+        } catch (Exception e) {
+            return FaceRegistrationResult.failure("Face registration failed: " + friendlyMessage(e.getMessage()));
+        }
+    }
+
     private FaceCaptureResult captureFaceImage(Path outputImagePath) throws IOException, InterruptedException {
         List<String> command = List.of(
                 PYTHON_EXECUTABLE,
@@ -153,6 +185,24 @@ public class FaceRecognitionService {
                 success ? response.message : friendlyMessage(response.message),
                 imagePath != null ? Path.of(imagePath) : outputImagePath,
                 response.face_count != null ? response.face_count : 0
+        );
+    }
+
+    private FaceEnrollmentResult captureFaceEmbedding() throws IOException, InterruptedException {
+        List<String> command = List.of(
+                PYTHON_EXECUTABLE,
+                FACE_RECOGNITION_SCRIPT.toString(),
+                "enroll",
+                "--duration",
+                String.valueOf(CAPTURE_DURATION_SECONDS)
+        );
+
+        ProcessOutcome processOutcome = runProcess(command, Duration.ofSeconds(CAPTURE_DURATION_SECONDS + 30L));
+        FaceEnrollmentResponse response = parseResponse(processOutcome.stdout, FaceEnrollmentResponse.class, processOutcome.stderr);
+        return new FaceEnrollmentResult(
+                response.success,
+                response.message,
+                response.embedding != null ? response.embedding : new double[0]
         );
     }
 
@@ -446,6 +496,50 @@ public class FaceRecognitionService {
         }
     }
 
+    public static final class FaceRegistrationResult {
+        private final boolean success;
+        private final String message;
+        private final User user;
+        private final String embeddingJson;
+        private final int embeddingSize;
+
+        private FaceRegistrationResult(boolean success, String message, User user, String embeddingJson, int embeddingSize) {
+            this.success = success;
+            this.message = message;
+            this.user = user;
+            this.embeddingJson = embeddingJson;
+            this.embeddingSize = embeddingSize;
+        }
+
+        public static FaceRegistrationResult success(User user, String embeddingJson, String message, int embeddingSize) {
+            return new FaceRegistrationResult(true, message, user, embeddingJson, embeddingSize);
+        }
+
+        public static FaceRegistrationResult failure(String message) {
+            return new FaceRegistrationResult(false, message, null, null, 0);
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public User getUser() {
+            return user;
+        }
+
+        public String getEmbeddingJson() {
+            return embeddingJson;
+        }
+
+        public int getEmbeddingSize() {
+            return embeddingSize;
+        }
+    }
+
     public static final class FaceRecognitionResult {
         private final boolean success;
         private final String message;
@@ -558,6 +652,24 @@ public class FaceRecognitionService {
         private Double distance;
         private Double threshold;
         private Integer candidate_count;
+    }
+
+    private static final class FaceEnrollmentResult {
+        private final boolean success;
+        private final String message;
+        private final double[] embedding;
+
+        private FaceEnrollmentResult(boolean success, String message, double[] embedding) {
+            this.success = success;
+            this.message = message;
+            this.embedding = embedding;
+        }
+    }
+
+    private static final class FaceEnrollmentResponse {
+        private boolean success;
+        private String message;
+        private double[] embedding;
     }
 }
 
