@@ -30,7 +30,6 @@ Prerequisites
 Java JDK 17 or higher
 JavaFX SDK
 IDE (IntelliJ IDEA / Eclipse / NetBeans)
-خطوات التشغيل (Run Instructions)
 Clone the repository:
 git clone https://github.com/mohsennabli/Smarttask.git
 Open the project in your IDE
