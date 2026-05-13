@@ -1,24 +1,56 @@
-# SmartTask JavaFX
+🖥️ JavaFX Client Application
+📌 Overview
 
-## Face Registration (Profile)
+This project is a JavaFX desktop application developed as part of an Integrated Project. It serves as the client-side interface that interacts with a Symfony-based backend via REST APIs.
 
-This project includes a face registration flow that captures a single face from the webcam and stores a 128-d embedding in the `user.face_embedding` column.
+The application provides a responsive and user-friendly interface, enabling users to perform core operations efficiently while ensuring smooth communication with the backend system.
 
-### Requirements
+🚀 Features
+🔐 User authentication and session management
+📊 Interactive dashboard
+🔄 Real-time data synchronization with backend (REST API)
+🧾 CRUD operations (Create, Read, Update, Delete)
+🎨 Modern and intuitive JavaFX UI
+🛠️ Technologies Used
+Java 17+
+JavaFX
+FXML (UI Design)
+REST API Integration (Symfony Backend)
+MySQL (via backend)
+📂 Project Structure
+src/
+ ├── controllers/     # JavaFX controllers
+ ├── models/          # Data models
+ ├── services/        # API communication logic
+ ├── utils/           # Helper classes
+ ├── views/           # FXML UI files
+ └── Main.java        # Entry point
+⚙️ Installation & Setup
+Prerequisites
+Java JDK 17 or higher
+JavaFX SDK
+IDE (IntelliJ IDEA / Eclipse / NetBeans)
+خطوات التشغيل (Run Instructions)
+Clone the repository:
+git clone https://github.com/mohsennabli/Smarttask.git
+Open the project in your IDE
 
-- Python venv: `/home/mohsen-nabli/IdeaProjects/smarttask-javafx/face_env/bin/python3`
-- Python packages: `face_recognition`, `opencv-python`, `numpy`
-- Webcam access
 
-### Quick Test (CLI)
+🤝 Teamwork
 
-Run the face registration script directly (outputs JSON only):
+This project was developed collaboratively as part of an academic initiative, focusing on:
 
-```bash
-/home/mohsen-nabli/IdeaProjects/smarttask-javafx/face_env/bin/python3 face_register.py 1
-```
+Agile teamwork
+Problem-solving
+Full-stack integration
+📈 Future Improvements
+🔔 Notifications system
+📱 Mobile version integration
+🔐 Enhanced security features
+🌐 Deployment and cloud hosting
 
-### In-App Flow
 
-Open **Profile** and click **Register My Face** to capture a face and save the embedding to the database.
 
+⭐ Acknowledgments
+
+Special thanks to our mentors and institution for their continuous support and guidance throughout this project.
